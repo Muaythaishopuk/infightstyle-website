@@ -14,6 +14,7 @@ static site that can be hosted for free.
   If no event is coming up, the home page and Next Events page say "Next event announced soon".
 - **Preview another day:** add `?today=2026-10-01` to the address to see the site as it
   would look on that date.
+- **News / blog post:** copy one `{ ... }` block in `posts.js`. Newest dates show first on `/news/`.
 - **Gallery photos:** add the file to `images/` and copy one `<a>…</a>` line in
   `gallery/index.html`.
 - Links (shop, Facebook, Instagram, emails) are at the top of `assets/site.js`.

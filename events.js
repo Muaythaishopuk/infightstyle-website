@@ -10,12 +10,28 @@
  *  date      "YYYY-MM-DD"  (e.g. "2027-02-14")
  *  poster    image file in the images folder, or "" for none
  *  entryUrl  Kihapp (or other) sign-up link, or "" for none
+ *  entryLabel  button text for that link (default "Sign up on Kihapp")
  *  prices    list of lines, e.g. ["Entry: £45", "Spectators: £20"]
  *  preview   paragraphs shown BEFORE the event (sell it, how to enter)
  *  writeUp   paragraphs shown AFTER the event (how it went); if left
  *            empty, the preview text is shown instead
  */
 window.IFS_EVENTS = [
+  {
+    title: "INFIGHTSTYLE Fight League #1",
+    tag: "Pro & Pro-Am fight night",
+    date: "2026-11-21",
+    venue: "The Hideout Sports Venue, Farnworth · Doors 12pm, first fight 1pm",
+    poster: "poster-fight-league-1-2026-11-21.jpg",
+    entryUrl: "https://combat-tickets.com/tickets/?sid=87",
+    entryLabel: "Buy tickets",
+    prices: ["Standard: £40", "Outer ringside: £50", "Ringside: £65", "VIP suite: £160 (unlimited bar)"],
+    preview: [
+      "Our first adult fight night, in collaboration with Infightstyle. Headlined by Jake Newman (14–0) vs Louie Doherty (16–1) for the WMO Welterweight World Title, with Karl Ryan vs Brooks Sowerby for the WMO Super Lightweight European Title as the co-main event.",
+      "Also on the main card: Max Manley vs Uzzy Choudry and Dan Fardey vs Jack Halliday, plus a full undercard of Pro-Am bouts from gyms across the UK and Ireland. We're expecting a sell-out.",
+    ],
+    writeUp: [],
+  },
   {
     title: "The Big One — Infightstyle Open",
     tag: "Open tournament",

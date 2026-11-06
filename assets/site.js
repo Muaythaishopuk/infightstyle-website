@@ -7,6 +7,7 @@
     juniorRangeUrl: "https://www.themuaythaishop.co.uk/collections/junior",
     facebook: "https://www.facebook.com/profile.php?id=61576369900462&locale=en_GB",
     instagram: "https://www.instagram.com/ifsjuniorleagueuk",
+    instagramLeague: "https://www.instagram.com/infightstylefightleague",
     email: "info@infightstylefightleague.co.uk",
     sponsorEmail: "infightjuniors@gmail.com",
   };
@@ -16,6 +17,7 @@
     ["Gallery", "/gallery/"],
     ["Next events", "/next-events/"],
     ["Past events", "/past-events/"],
+    ["News", "/news/"],
     ["Muay Thai Shop", SITE.shopUrl],
     ["Sponsors", "/sponsors/"],
     ["Contact", "/contact-us/"],
@@ -47,7 +49,8 @@
     return (
       '<div class="socials">' +
       '<a href="' + SITE.facebook + '" target="_blank" rel="noopener" aria-label="Facebook">' + ICONS.facebook + "</a>" +
-      '<a href="' + SITE.instagram + '" target="_blank" rel="noopener" aria-label="Instagram">' + ICONS.instagram + "</a>" +
+      '<a href="' + SITE.instagramLeague + '" target="_blank" rel="noopener" aria-label="Instagram: INFIGHTSTYLE Fight League" title="@infightstylefightleague">' + ICONS.instagram + "</a>" +
+      '<a href="' + SITE.instagram + '" target="_blank" rel="noopener" aria-label="Instagram: IFS Junior League" title="@ifsjuniorleagueuk">' + ICONS.instagram + "</a>" +
       "</div>"
     );
   }
@@ -133,7 +136,7 @@
     var prices = !isPast && e.prices && e.prices.length
       ? '<ul class="prices">' + e.prices.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>"
       : "";
-    var cta = !isPast && e.entryUrl ? link("Sign up on Kihapp", e.entryUrl, "btn") : "";
+    var cta = !isPast && e.entryUrl ? link(esc(e.entryLabel || "Sign up on Kihapp"), e.entryUrl, "btn") : "";
     var poster = e.poster
       ? '<a class="poster" href="/images/' + esc(e.poster) + '" target="_blank" rel="noopener"><img src="/images/' + esc(e.poster) + '" alt="' + esc(e.title) + ' poster" loading="lazy"></a>'
       : "";
@@ -182,7 +185,7 @@
         "<h1>" + esc(e.title) + "</h1>" +
         (e.venue ? '<p class="lead">' + esc(e.venue) + "</p>" : "") +
         '<div class="actions">' +
-        (e.entryUrl ? link("Click here to enter", e.entryUrl, "btn") : "") +
+        (e.entryUrl ? link(esc(e.entryLabel || "Click here to enter"), e.entryUrl, "btn") : "") +
         '<a class="btn ghost" href="/next-events/">All upcoming events</a></div>';
     } else {
       body =
@@ -195,13 +198,65 @@
     var img = e && e.poster
       ? '<img src="/images/' + esc(e.poster) + '" alt="' + esc(e.title) + ' poster">'
       : "";
+    if (!img && split.next[0] && e.prices && e.prices.length) {
+      img = '<div class="panel hero-tickets"><p class="eyebrow">Tickets</p><ul class="prices">' +
+        e.prices.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>" +
+        paragraphs(e.preview.slice(0, 1)) + "</div>";
+    }
     el.innerHTML = '<div class="wrap hero-inner"><div class="hero-text">' + body + "</div>" +
       (img ? '<figure class="hero-img" style="margin:0">' + img +
         (split.next[0] ? "" : '<figcaption>Latest event: ' + esc(e.title) + ' · <a href="/past-events/">see all past events</a></figcaption>') +
         "</figure>" : "") + "</div>";
   }
 
+  /* ---------- news ---------- */
+
+  function postsSorted() {
+    return (window.IFS_POSTS || []).slice().sort(function (a, b) { return parseDate(b.date) - parseDate(a.date); });
+  }
+
+  function renderNewsList() {
+    var el = document.getElementById("news-list");
+    if (!el) return;
+    var posts = postsSorted();
+    if (!posts.length) { el.innerHTML = "<p>No news yet.</p>"; return; }
+    el.innerHTML = posts.map(function (p) {
+      return '<article class="card news-card"><p class="meta">' + esc(prettyDate(p.date)) + "</p>" +
+        '<h3><a href="/news/post/?p=' + encodeURIComponent(p.slug) + '">' + esc(p.title) + "</a></h3>" +
+        "<p>" + esc(p.summary) + "</p>" +
+        '<a class="btn ghost" href="/news/post/?p=' + encodeURIComponent(p.slug) + '">Read more</a></article>';
+    }).join("");
+  }
+
+  function block(b) {
+    if (typeof b === "string") return "<p>" + esc(b) + "</p>";
+    if (b.h) return "<h2>" + esc(b.h) + "</h2>";
+    if (b.list) return "<ul>" + b.list.map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ul>";
+    if (b.img) return '<img class="post-img" src="/images/' + esc(b.img) + '" alt="' + esc(b.alt || "") + '" loading="lazy">';
+    if (b.button) return '<div class="actions">' + link(esc(b.button), b.url, "btn") + "</div>";
+    return "";
+  }
+
+  function renderPost() {
+    var el = document.getElementById("post");
+    if (!el) return;
+    var slug = new URLSearchParams(location.search).get("p");
+    var post = postsSorted().filter(function (p) { return p.slug === slug; })[0];
+    if (!post) {
+      el.innerHTML = '<h1>Post not found</h1><p><a href="/news/">Back to all news</a></p>';
+      return;
+    }
+    document.title = post.title + " | INFIGHTSTYLE Fight League";
+    var d = document.querySelector('meta[name="description"]');
+    if (d) d.setAttribute("content", post.summary);
+    el.innerHTML = '<p class="eyebrow">' + esc(prettyDate(post.date)) + "</p><h1>" + esc(post.title) + "</h1>" +
+      '<p class="lead">' + esc(post.summary) + "</p>" + post.body.map(block).join("") +
+      '<p class="back"><a href="/news/">← All news</a></p>';
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    renderNewsList();
+    renderPost();
     renderHeader();
     renderFooter();
     var split = splitEvents();
