@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gallery | Infightstyle Fight League</title>
+<meta name="description" content="Photos from Infightstyle Fight League junior Muay Thai events.">
+<meta property="og:title" content="Gallery | Infightstyle Fight League">
+<meta property="og:description" content="Photos from Infightstyle Fight League junior Muay Thai events.">
+<meta property="og:image" content="https://www.infightstylefightleague.co.uk/images/gallery-body-kick.jpg">
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<script src="/events.js" defer></script>
+<script src="/assets/site.js" defer></script>
+</head>
+<body>
+<header id="site-header"></header>
+<main>
+<section class="page-banner wrap">
+  <h1>Gallery</h1>
+  <p>Sneak peek: the world of Infightstyle Fight League in pictures.</p>
+</section>
+<section class="section" style="padding-top:1.5rem">
+  <div class="wrap gallery" id="gallery">
+    <a href="/images/gallery-teep.jpg"><img src="/images/gallery-teep.jpg" alt="Two young fighters in a Muay Thai match exchanging kicks" loading="lazy"></a>
+    <a href="/images/gallery-walkout-corridor.jpg"><img src="/images/gallery-walkout-corridor.jpg" alt="Silhouette of a fighter walking through a blue-lit corridor" loading="lazy"></a>
+    <a href="/images/gallery-ibrahim.jpg"><img src="/images/gallery-ibrahim.jpg" alt="Two juniors in a Muay Thai bout" loading="lazy"></a>
+    <a href="/images/gallery-body-kick.jpg"><img src="/images/gallery-body-kick.jpg" alt="Two young fighters in a ring during a Muay Thai match" loading="lazy"></a>
+    <a href="/images/gallery-walkout-robe.jpg"><img src="/images/gallery-walkout-robe.jpg" alt="Fighter entering the ring in a colourful robe and headband" loading="lazy"></a>
+    <a href="/images/gallery-reggie.jpg"><img src="/images/gallery-reggie.jpg" alt="Junior fighter at an Infightstyle event" loading="lazy"></a>
+  </div>
+</section>
+<div class="lightbox" id="lightbox"><img alt=""></div>
+<script>
+  (function () {
+    var box = document.getElementById("lightbox"), img = box.querySelector("img");
+    document.getElementById("gallery").addEventListener("click", function (e) {
+      var a = e.target.closest("a"); if (!a) return;
+      e.preventDefault(); img.src = a.href; img.alt = a.querySelector("img").alt; box.classList.add("show");
+    });
+    box.addEventListener("click", function () { box.classList.remove("show"); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") box.classList.remove("show"); });
+  })();
+</script>
+</main>
+<footer id="site-footer"></footer>
+</body>
+</html>
