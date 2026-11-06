@@ -189,9 +189,9 @@
         '<a class="btn ghost" href="/next-events/">All upcoming events</a></div>';
     } else {
       body =
-        '<p class="eyebrow">Junior Muay Thai · UK</p>' +
-        "<h1>Infightstyle Junior Fight League</h1>" +
-        '<p class="lead">Professional junior Muay Thai shows and tournaments. Our next event will be announced soon. Follow us so you don\'t miss sign-ups.</p>' +
+        '<p class="eyebrow">Muay Thai · Bolton, UK</p>' +
+        "<h1>INFIGHTSTYLE Fight League</h1>" +
+        '<p class="lead">Pro and Pro-Am fight nights and the IFS Junior League. Our next event will be announced soon. Follow us on Instagram so you don\'t miss tickets and sign-ups.</p>' +
         '<div class="actions"><a class="btn" href="/past-events/">See past events</a>' +
         '<a class="btn ghost" href="/contact-us/">Get in touch</a></div>';
     }
