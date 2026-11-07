@@ -128,7 +128,11 @@ window.IFS_POSTS = [
       { h: "A real clash of styles" },
       "This is the classic Muay Thai question: can pressure break technique, or does technique punish pressure? If Brooks can close the distance and drag Karl into a fight, his power changes everything. If Karl keeps it at his range and stays a step ahead, Brooks could find himself chasing shadows all night. Opinions are split right down the middle, and there's only one way to settle it.",
       { h: "The war of words" },
-      "Brooks went first in his Kotys Kombat interview, with no filter and no fear. Karl has now given his response. Two fighters, two very different perspectives, and on 21 November one of them gets the last word. Watch both interviews on @infightstylefightleague on Instagram.",
+      "Brooks went first in his Kotys Kombat interview, with no filter and no fear. Karl has now given his response. Two fighters, two very different perspectives, and on 21 November one of them gets the last word. Watch both interviews below.",
+      { videos: [
+        { insta: "https://www.instagram.com/reel/DfVHYcoAhj5/", label: "Brooks Sowerby pre-fight interview" },
+        { insta: "https://www.instagram.com/reel/DfalIdhA_e5/", label: "Karl Ryan's response" },
+      ] },
       { h: "Two of the UK's hottest prospects. One European title." },
       "Whoever wins leaves Bolton with a WMO European belt and a big claim to be one of the best young fighters in the country. If Brooks is right about fight of the night, you won't want to miss it.",
       { h: "Fight night" },
