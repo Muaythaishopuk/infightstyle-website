@@ -232,6 +232,15 @@
     if (typeof b === "string") return "<p>" + esc(b) + "</p>";
     if (b.h) return "<h2>" + esc(b.h) + "</h2>";
     if (b.list) return "<ul>" + b.list.map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ul>";
+    if (b.videos) {
+      return '<div class="video-grid">' + b.videos.map(function (v) {
+        var url = esc(v.insta);
+        return '<figure class="video">' +
+          '<blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14">' +
+          '<a href="' + url + '" target="_blank" rel="noopener">Watch on Instagram</a></blockquote>' +
+          '<figcaption><a href="' + url + '" target="_blank" rel="noopener">▶ ' + esc(v.label) + "</a></figcaption></figure>";
+      }).join("") + "</div>";
+    }
     if (b.img) return '<img class="post-img" src="/images/' + esc(b.img) + '" alt="' + esc(b.alt || "") + '" loading="lazy">';
     if (b.button) return '<div class="actions">' + link(esc(b.button), b.url, "btn") + "</div>";
     return "";
@@ -252,6 +261,12 @@
     el.innerHTML = '<p class="eyebrow">' + esc(prettyDate(post.date)) + "</p><h1>" + esc(post.title) + "</h1>" +
       '<p class="lead">' + esc(post.summary) + "</p>" + post.body.map(block).join("") +
       '<p class="back"><a href="/news/">← All news</a></p>';
+    if (el.querySelector(".instagram-media")) {
+      var sc = document.createElement("script");
+      sc.async = true;
+      sc.src = "https://www.instagram.com/embed.js";
+      document.body.appendChild(sc);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {

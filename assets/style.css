@@ -138,3 +138,9 @@ nav a[aria-current="page"] { box-shadow: inset 0 -2px var(--red); }
 .article .back { margin-top: 2.5rem; }
 .hero-tickets .prices { flex-direction: column; }
 .article .post-img { width: 100%; max-width: 560px; border-radius: 10px; margin: 1.5rem 0; }
+.video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+.video { margin: 0; }
+.video .instagram-media { min-width: 0 !important; width: 100% !important; margin: 0 !important; }
+.video figcaption { margin-top: .6rem; font-weight: 700; }
+.video figcaption a { color: #fff; text-decoration: none; }
+.video figcaption a:hover { color: var(--red); }

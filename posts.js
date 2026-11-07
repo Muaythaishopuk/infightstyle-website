@@ -13,6 +13,7 @@
  *             { list: ["one", "two"] }     a bullet list
  *             { button: "Text", url: "" }  a red button link
  *             { img: "file.jpg", alt: "" }  an image from the images folder
+ *             { videos: [{ insta: "instagram link", label: "" }] }  Instagram videos
  */
 window.IFS_POSTS = [
   {
@@ -97,7 +98,11 @@ window.IFS_POSTS = [
       "This is unbeaten against unbeaten on RWS, with a world title at stake. Newman's record is built on beating the best names put in front of him; Doherty's is built on not letting fights reach the final bell. Something has to give. If Doherty finds an early finish, Newman's perfect record goes with it. If Newman takes him into the later rounds, it becomes a test of who has prepared better for the full distance at world level.",
       "As we said when we made the fight: this one could easily be happening inside Rajadamnern Stadium. Instead, it's coming to Bolton.",
       { h: "Watch the build-up" },
-      "Both fighters have sat down with Kotys Kombat for pre-fight interviews. Watch them on @infightstylefightleague on Instagram, then decide who's leaving with the belt.",
+      "Both fighters have sat down with Kotys Kombat for pre-fight interviews. Watch them below, then decide who's leaving with the belt.",
+      { videos: [
+        { insta: "https://www.instagram.com/reel/DfNeFS1A8M6/", label: "Jake Newman pre-fight interview" },
+        { insta: "https://www.instagram.com/reel/De634X1BtKl/", label: "Louie Doherty pre-fight interview" },
+      ] },
       { h: "Fight night" },
       { list: [
         "Saturday 21 November 2026",
