@@ -1,0 +1,12 @@
+{
+  "threshold": 0,
+  "minLines": 4,
+  "minTokens": 25,
+  "mode": "strict",
+  "format": ["python"],
+  "path": ["venue_layout", "tests", "check.py"],
+  "ignore": ["**/__pycache__/**"],
+  "reporters": ["console"],
+  "absolute": false,
+  "exitCode": 1
+}

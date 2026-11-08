@@ -1,2 +1,6 @@
 .DS_Store
-DNS-RECORDS.md
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
