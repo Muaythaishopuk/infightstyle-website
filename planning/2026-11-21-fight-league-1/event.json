@@ -17,28 +17,40 @@
   },
   "tunnel": {
     "width_m": 3.0,
-    "depth_m": 3.0
+    "depth_m": 4.5
   },
   "seats": {
     "width_m": 0.5,
     "row_depth_m": 0.9,
     "corner_aisle_m": 1.2,
     "radial_aisle_m": 1.2,
-    "min_block_seats": 4
+    "tier_aisle_m": 1.0,
+    "min_block_seats": 2
   },
   "tiers": [
+    {
+      "name": "Standard",
+      "colour": "#60a5fa",
+      "sides": [
+        "left"
+      ],
+      "target_seats": 150,
+      "rows": null,
+      "gap_before_m": 0,
+      "straight_rows": true
+    },
     {
       "name": "Ringside",
       "colour": "#d4af37",
       "sides": [
         "top",
         "bottom",
-        "left",
         "right"
       ],
       "target_seats": 150,
       "rows": null,
-      "gap_before_m": 0
+      "gap_before_m": 0,
+      "straight_rows": false
     },
     {
       "name": "Outer ringside",
@@ -50,21 +62,12 @@
       ],
       "target_seats": 200,
       "rows": null,
-      "gap_before_m": 0.6
-    },
-    {
-      "name": "Standard",
-      "colour": "#60a5fa",
-      "sides": [
-        "left"
-      ],
-      "target_seats": null,
-      "rows": null,
-      "gap_before_m": 0.6
+      "gap_before_m": 0.6,
+      "straight_rows": false
     }
   ],
   "bleachers": {
-    "depth_m": 3.0,
+    "depth_m": 4.5,
     "length_m": 25.6,
     "row_depth_m": 0.75,
     "seat_width_m": 0.45

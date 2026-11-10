@@ -27,8 +27,8 @@ def test_svg_is_valid_and_draws_every_seat(event: EventSpec) -> None:
         "30 m",
         "28 m",
         "BLEACHERS",
-        "Floor chairs: 370",
-        "Total with bleachers: about 570",
+        "Floor chairs: 500",
+        "Total with bleachers: about 800",
     ):
         assert expected in labels
 
@@ -59,7 +59,7 @@ def test_cli_writes_then_reports_unchanged(
     assert main([str(REAL_EVENT), "--out", str(out)]) == 0
     printed = capsys.readouterr().out
     assert "Unchanged" in printed
-    assert "Total: 370 seats" in printed
+    assert "Total: 500 seats" in printed
 
 
 def test_cli_default_output_sits_next_to_event(tmp_path: Path) -> None:

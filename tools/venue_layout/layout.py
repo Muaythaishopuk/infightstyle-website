@@ -71,6 +71,16 @@ def _strip(side: Side, ring: Rect, offset: float, seats: SeatSpec) -> Rect | Non
     }[side]
 
 
+def _straight_strip(side: Side, ring: Rect, offset: float, area: Rect, depth: float) -> Rect:
+    """A row ``offset`` metres out from ``side`` running the full width of ``area``."""
+    return {
+        Side.TOP: Rect(area.x, ring.y - offset - depth, area.width, depth),
+        Side.BOTTOM: Rect(area.x, ring.bottom + offset, area.width, depth),
+        Side.LEFT: Rect(ring.x - offset - depth, area.y, depth, area.height),
+        Side.RIGHT: Rect(ring.right + offset, area.y, depth, area.height),
+    }[side]
+
+
 def _blocks(
     start: float, end: float, splits: tuple[float, float], aisle: float
 ) -> list[tuple[float, float]]:
@@ -96,19 +106,32 @@ def _chairs_along(start: float, end: float, width: float) -> list[float]:
     return [first + i * width for i in range(count)]
 
 
-def _strip_chairs(side: Side, strip: Rect, ring: Rect, seats: SeatSpec) -> Iterator[Rect]:
+def _strip_blocks(side: Side, strip: Rect, ring: Rect, seats: SeatSpec) -> Iterator[list[Rect]]:
+    """Chairs for one strip, grouped into blocks separated by the in-line aisles."""
     horizontal = side in {Side.TOP, Side.BOTTOM}
     start, end = (strip.x, strip.right) if horizontal else (strip.y, strip.bottom)
     splits = (ring.x, ring.right) if horizontal else (ring.y, ring.bottom)
     for block_start, block_end in _blocks(start, end, splits, seats.radial_aisle_m):
         positions = _chairs_along(block_start, block_end, seats.width_m)
-        if len(positions) < seats.min_block_seats:
-            continue
-        for pos in positions:
-            if horizontal:
-                yield Rect(pos, strip.y, seats.width_m, strip.height)
-            else:
-                yield Rect(strip.x, pos, strip.width, seats.width_m)
+        if horizontal:
+            yield [Rect(pos, strip.y, seats.width_m, strip.height) for pos in positions]
+        else:
+            yield [Rect(strip.x, pos, strip.width, seats.width_m) for pos in positions]
+
+
+def _runs(chairs: list[Rect], width: float) -> list[list[Rect]]:
+    """Split a block into runs of chairs that sit shoulder to shoulder."""
+    runs: list[list[Rect]] = []
+    for chair in chairs:
+        last = runs[-1][-1] if runs else None
+        touching = last is not None and (
+            abs(chair.x - last.x) + abs(chair.y - last.y) <= width + 1e-6
+        )
+        if touching:
+            runs[-1].append(chair)
+        else:
+            runs.append([chair])
+    return runs
 
 
 def _best_first(row: list[Seat], ring: Rect) -> list[Seat]:
@@ -129,6 +152,33 @@ def _best_first(row: list[Seat], ring: Rect) -> list[Seat]:
     return [queue[i] for i in range(longest) for queue in by_side if i < len(queue)]
 
 
+def _short_runs(chosen: list[Seat], seats: SeatSpec) -> set[Seat]:
+    """Seats in ``chosen`` that would sit in a run shorter than ``min_block_seats``."""
+    short: set[Seat] = set()
+    for side in Side:
+        on_side = sorted((s for s in chosen if s.side == side), key=lambda s: (s.rect.x, s.rect.y))
+        by_rect = {s.rect: s for s in on_side}
+        for run in _runs([s.rect for s in on_side], seats.width_m):
+            if len(run) < seats.min_block_seats:
+                short.update(by_rect[rect] for rect in run)
+    return short
+
+
+def _take(ordered: list[Seat], wanted: int, seats: SeatSpec) -> list[Seat]:
+    """Take up to ``wanted`` seats in priority order without leaving lone chairs.
+
+    Chairs that would end up in a too-short run are swapped for the next best chairs.
+    The result can fall short of ``wanted``; the caller then carries on to the next row.
+    """
+    banned: set[Seat] = set()
+    while True:
+        chosen = [seat for seat in ordered if seat not in banned][:wanted]
+        short = _short_runs(chosen, seats)
+        if not short:
+            return chosen
+        banned |= short
+
+
 @dataclass
 class _Floor:
     """Mutable placement state: what is placed so far and how deep each side has got."""
@@ -147,7 +197,7 @@ class _Floor:
             return False
         return not any(
             chair.overlaps(
-                seat.rect if seat.tier == tier.name else seat.rect.inset(-tier.gap_before_m)
+                seat.rect if seat.tier == tier.name else seat.rect.inset(-self.seats.tier_aisle_m)
             )
             for seat in self.placed
         )
@@ -156,12 +206,19 @@ class _Floor:
         """Chairs for one row of ``tier`` on each of its sides, then step those sides out."""
         found: list[Seat] = []
         for side in tier.sides:
-            strip = _strip(side, self.ring, self.depth[side], self.seats)
+            offset = self.depth[side]
+            strip = (
+                _straight_strip(side, self.ring, offset, self.seating_area, self.seats.row_depth_m)
+                if tier.straight_rows
+                else _strip(side, self.ring, offset, self.seats)
+            )
             if strip is not None:
                 found += [
                     Seat(tier.name, row, side, chair)
-                    for chair in _strip_chairs(side, strip, self.ring, self.seats)
-                    if self._free(chair, tier)
+                    for block in _strip_blocks(side, strip, self.ring, self.seats)
+                    for run in _runs([c for c in block if self._free(c, tier)], self.seats.width_m)
+                    if len(run) >= self.seats.min_block_seats
+                    for chair in run
                 ]
             self.depth[side] += self.seats.row_depth_m
         return found
@@ -178,7 +235,7 @@ class _Floor:
             if not found:
                 break
             if tier.target_seats is not None:
-                found = found[: tier.target_seats - total]
+                found = _take(found, tier.target_seats - total, self.seats)
             self.placed += found
             total += len(found)
             if total == tier.target_seats:

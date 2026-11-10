@@ -22,7 +22,7 @@ def test_real_event_file_is_valid() -> None:
     event = load_event(REAL_EVENT)
     assert event.room.width_m == 30
     assert event.room.depth_m == 28
-    assert [tier.name for tier in event.tiers] == ["Ringside", "Outer ringside", "Standard"]
+    assert [tier.name for tier in event.tiers] == ["Standard", "Ringside", "Outer ringside"]
 
 
 @pytest.mark.parametrize(
@@ -45,6 +45,7 @@ def test_real_event_file_is_valid() -> None:
         (_set_tier(0, "name", " "), "name must not be empty"),
         (_set_tier(0, "rows", 0), "rows must be at least 1"),
         (_set_tier(0, "target_seats", 1.5), "whole number or null"),
+        (_set_tier(0, "straight_rows", "yes"), "must be true or false"),
         (_set_tier(0, "rows", 1.5), "whole number or null"),
         (_set_tier(0, "target_seats", 0), "target_seats must be > 0"),
         (_set_tier(0, "sides", []), "at least one side"),
@@ -53,7 +54,7 @@ def test_real_event_file_is_valid() -> None:
         (_set_tier(0, "sides", "top"), "sides must be a list"),
         (_set("bleachers", "depth_m", 12), "bleachers reach the ring"),
         (_set_tier(0, "gap_before_m", -1), "must not be negative"),
-        (_set_tier(1, "name", "Ringside"), "must be unique"),
+        (_set_tier(1, "name", "Standard"), "must be unique"),
     ],
 )
 def test_bad_settings_are_rejected(mutate: Mutation, message: str) -> None:

@@ -121,6 +121,7 @@ class SeatSpec(_Measurements):
     row_depth_m: float
     corner_aisle_m: float
     radial_aisle_m: float
+    tier_aisle_m: float
     min_block_seats: float
 
     def __post_init__(self) -> None:
@@ -137,6 +138,8 @@ class TierSpec:
 
     Rows are added until ``target_seats`` is reached (the last row is trimmed to hit it
     exactly), ``rows`` rows are used, or nothing more fits. Leave both as ``None`` to fill.
+    Rows wrap round the ring with diagonal corner aisles, unless ``straight_rows`` is set:
+    then each row runs the full width of the floor (useful for a block in front of a stand).
     """
 
     name: str
@@ -145,6 +148,7 @@ class TierSpec:
     target_seats: int | None
     rows: int | None
     gap_before_m: float
+    straight_rows: bool
 
     def __post_init__(self) -> None:
         """Validate the tier."""
@@ -259,7 +263,15 @@ def _tier(data: object, index: int) -> TierSpec:
         msg = f"{section} must be an object"
         raise ConfigError(msg)
     tier = {str(k): v for k, v in data.items()}
-    _check_keys(section, tier, {"name", "colour", "sides", "target_seats", "rows", "gap_before_m"})
+    _check_keys(
+        section,
+        tier,
+        {"name", "colour", "sides", "target_seats", "rows", "gap_before_m", "straight_rows"},
+    )
+    straight = tier["straight_rows"]
+    if not isinstance(straight, bool):
+        msg = f"{section}.straight_rows must be true or false, got {straight!r}"
+        raise ConfigError(msg)
     return TierSpec(
         name=_text(section, tier, "name"),
         colour=_text(section, tier, "colour"),
@@ -267,6 +279,7 @@ def _tier(data: object, index: int) -> TierSpec:
         target_seats=_whole_or_null(section, tier, "target_seats"),
         rows=_whole_or_null(section, tier, "rows"),
         gap_before_m=_number(section, tier, "gap_before_m"),
+        straight_rows=straight,
     )
 
 
