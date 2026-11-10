@@ -17,7 +17,8 @@ BASE_EVENT: JsonObject = {
     "room": {"width_m": 30, "depth_m": 28, "perimeter_aisle_m": 1.2},
     "ring": {"platform_m": 7.0, "ropes_m": 6.0, "clearance_m": 2.0},
     "walkway": {"width_m": 2.0, "barrier_m": 0.5},
-    "tunnel": {"width_m": 3.0, "depth_m": 2.0},
+    "tunnel": {"width_m": 3.0, "depth_m": 3.0},
+    "bleachers": {"depth_m": 3.0, "length_m": 25.6, "row_depth_m": 0.75, "seat_width_m": 0.45},
     "seats": {
         "width_m": 0.5,
         "row_depth_m": 0.9,
@@ -26,9 +27,30 @@ BASE_EVENT: JsonObject = {
         "min_block_seats": 4,
     },
     "tiers": [
-        {"name": "Ringside", "colour": "#d4af37", "rows": 2, "gap_before_m": 0},
-        {"name": "Outer ringside", "colour": "#e76f51", "rows": 2, "gap_before_m": 0.6},
-        {"name": "Standard", "colour": "#60a5fa", "rows": None, "gap_before_m": 0.6},
+        {
+            "name": "Ringside",
+            "colour": "#d4af37",
+            "sides": ["top", "bottom", "left", "right"],
+            "target_seats": 150,
+            "rows": None,
+            "gap_before_m": 0,
+        },
+        {
+            "name": "Outer ringside",
+            "colour": "#e76f51",
+            "sides": ["top", "bottom", "right"],
+            "target_seats": 200,
+            "rows": None,
+            "gap_before_m": 0.6,
+        },
+        {
+            "name": "Standard",
+            "colour": "#60a5fa",
+            "sides": ["left"],
+            "target_seats": None,
+            "rows": None,
+            "gap_before_m": 0.6,
+        },
     ],
 }
 

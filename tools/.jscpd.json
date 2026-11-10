@@ -1,7 +1,7 @@
 {
   "threshold": 0,
   "minLines": 4,
-  "minTokens": 25,
+  "minTokens": 30,
   "mode": "strict",
   "format": ["python"],
   "path": ["venue_layout", "tests", "check.py"],

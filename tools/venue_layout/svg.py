@@ -17,6 +17,8 @@ FONT = "font-family='Helvetica, Arial, sans-serif'"
 RED_CORNER = "#d62828"
 BLUE_CORNER = "#1d4ed8"
 NEUTRAL_CORNER = "#ffffff"
+BLEACHER_FILL = "#94a3b8"
+BLEACHER_STEP = "#64748b"
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,25 @@ def _walkout(layout: Layout) -> list[str]:
     ]
 
 
+def _bleachers(layout: Layout) -> list[str]:
+    """Each half of the stand, with a line for every stepped row."""
+    step = layout.event.bleachers.row_depth_m
+    rows = layout.event.bleachers.steps
+    parts: list[str] = []
+    for half in layout.bleachers:
+        parts.append(rect(half, Style(BLEACHER_FILL, "#334155", 1.5)))
+        parts += [
+            f"<line x1='{_px(half.x + row * step)}' y1='{_px(half.y)}' "
+            f"x2='{_px(half.x + row * step)}' y2='{_px(half.bottom)}' "
+            f"stroke='{BLEACHER_STEP}' stroke-width='1'/>"
+            for row in range(1, rows)
+        ]
+        parts.append(
+            _centred_label(half, "BLEACHERS (raised)", size=12, colour="#0f172a", rotate=True)
+        )
+    return parts
+
+
 def _seats(layout: Layout) -> list[str]:
     colours = {tier.name: tier.colour for tier in layout.event.tiers}
     return [
@@ -141,25 +162,45 @@ def _legend(layout: Layout, left_px: float) -> list[str]:
         text(left_px, 40, event.date, size=13, extra="fill='#4b5563'"),
         text(left_px, 78, "Seating tiers", size=14, extra="font-weight='bold'"),
     ]
+    entries = [
+        (tier.colour, f"{tier.name} (floor): {layout.count(tier.name)} seats")
+        for tier in event.tiers
+    ]
+    entries.append((BLEACHER_FILL, f"Bleachers: about {layout.bleacher_capacity} (estimate)"))
     y = 100.0
-    for tier in event.tiers:
+    for colour, summary in entries:
         parts.append(
             f"<rect x='{left_px:.2f}' y='{y - 11:.2f}' width='16' height='16' rx='3' "
-            f"fill='{tier.colour}' stroke='#1f2937' stroke-width='0.6'/>"
+            f"fill='{colour}' stroke='#1f2937' stroke-width='0.6'/>"
         )
-        summary = f"{tier.name}: {layout.count(tier.name)} seats, {layout.rows(tier.name)} rows"
         parts.append(text(left_px + 24, y + 2, summary, size=13))
         y += 26
-    parts.append(
+    parts += [
         text(
-            left_px, y + 4, f"Total: {len(layout.seats)} seats", size=14, extra="font-weight='bold'"
-        )
-    )
+            left_px,
+            y + 4,
+            f"Floor chairs: {len(layout.seats)}",
+            size=14,
+            extra="font-weight='bold'",
+        ),
+        text(
+            left_px,
+            y + 26,
+            f"Total with bleachers: about {len(layout.seats) + layout.bleacher_capacity}",
+            size=14,
+            extra="font-weight='bold'",
+        ),
+    ]
+    y += 22
     notes = [
         f"Ring platform {event.ring.platform_m:g} m, ropes {event.ring.ropes_m:g} m",
         f"{event.ring.clearance_m:g} m clear around ring (officials, corners)",
         f"Walkway {event.walkway.width_m:g} m wide + {event.walkway.barrier_m:g} m barriers",
-        f"{event.room.perimeter_aisle_m:g} m aisle round the walls",
+        f"{event.room.perimeter_aisle_m:g} m aisle round the walls and in front of bleachers",
+        (
+            f"Bleachers {event.bleachers.depth_m:g} m deep x {event.bleachers.length_m:g} m long, "
+            f"{event.bleachers.steps} steps"
+        ),
         f"{event.seats.corner_aisle_m:g} m diagonal aisles at the corners",
         f"{event.seats.radial_aisle_m:g} m aisles in line with the ring posts",
         f"Chair {event.seats.width_m:g} m wide, rows {event.seats.row_depth_m:g} m deep",
@@ -185,6 +226,7 @@ def render_svg(layout: Layout) -> str:
         rect(room, Style("#ffffff", "#111827", 3)),
         *_grid(layout),
         rect(layout.seating_area, Style("none", "#9ca3af", 1, dash="6 4")),
+        *_bleachers(layout),
         *_walkout(layout),
         *_seats(layout),
         *_ring(layout),

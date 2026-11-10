@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, fields
+from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar
+
+from venue_layout.geometry import whole_fits
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -17,6 +20,15 @@ JsonObject = dict[str, object]
 
 class ConfigError(ValueError):
     """Raised when an event file is missing values or contains impossible ones."""
+
+
+class Side(StrEnum):
+    """A side of the ring, as seen on the plan (the walkway leaves from the left)."""
+
+    TOP = "top"
+    BOTTOM = "bottom"
+    LEFT = "left"
+    RIGHT = "right"
 
 
 @dataclass(frozen=True)
@@ -83,6 +95,23 @@ class TunnelSpec(_Measurements):
 
 
 @dataclass(frozen=True)
+class BleacherSpec(_Measurements):
+    """A raised stand against the left wall, either side of the tunnel. Not floor seating."""
+
+    SECTION = "bleachers"
+
+    depth_m: float
+    length_m: float
+    row_depth_m: float
+    seat_width_m: float
+
+    @property
+    def steps(self) -> int:
+        """How many stepped rows fit in the stand's depth."""
+        return whole_fits(self.depth_m, self.row_depth_m)
+
+
+@dataclass(frozen=True)
 class SeatSpec(_Measurements):
     """Chair size and the aisles that keep rows accessible."""
 
@@ -104,27 +133,37 @@ class SeatSpec(_Measurements):
 
 @dataclass(frozen=True)
 class TierSpec:
-    """A ticket tier. ``rows`` of ``None`` means fill all remaining space."""
+    """A ticket tier of floor chairs, placed in rows around the ring on the given ``sides``.
+
+    Rows are added until ``target_seats`` is reached (the last row is trimmed to hit it
+    exactly), ``rows`` rows are used, or nothing more fits. Leave both as ``None`` to fill.
+    """
 
     name: str
     colour: str
+    sides: tuple[Side, ...]
+    target_seats: int | None
     rows: int | None
     gap_before_m: float
 
     def __post_init__(self) -> None:
         """Validate the tier."""
-        if not self.name.strip():
-            msg = "tier name must not be empty"
+        problem = self._problem()
+        if problem:
+            msg = f"tier {self.name!r} {problem}"
             raise ConfigError(msg)
-        if not _HEX_COLOUR.match(self.colour):
-            msg = f"tier {self.name!r} colour must look like #1a2b3c, got {self.colour!r}"
-            raise ConfigError(msg)
-        if self.rows is not None and self.rows <= 0:
-            msg = f"tier {self.name!r} rows must be at least 1, got {self.rows}"
-            raise ConfigError(msg)
-        if self.gap_before_m < 0:
-            msg = f"tier {self.name!r} gap_before_m must not be negative"
-            raise ConfigError(msg)
+
+    def _problem(self) -> str:
+        checks = [
+            (not self.name.strip(), "name must not be empty"),
+            (not _HEX_COLOUR.match(self.colour), f"colour must look like #1a2b3c: {self.colour}"),
+            (not self.sides, "must use at least one side"),
+            (len(set(self.sides)) != len(self.sides), "lists a side twice"),
+            (self.target_seats is not None and self.target_seats <= 0, "target_seats must be > 0"),
+            (self.rows is not None and self.rows <= 0, "rows must be at least 1"),
+            (self.gap_before_m < 0, "gap_before_m must not be negative"),
+        ]
+        return next((message for failed, message in checks if failed), "")
 
 
 @dataclass(frozen=True)
@@ -137,6 +176,7 @@ class EventSpec:
     ring: RingSpec
     walkway: WalkwaySpec
     tunnel: TunnelSpec
+    bleachers: BleacherSpec
     seats: SeatSpec
     tiers: tuple[TierSpec, ...]
 
@@ -149,11 +189,11 @@ class EventSpec:
         if len(set(names)) != len(names):
             msg = f"tier names must be unique, got {names}"
             raise ConfigError(msg)
-        if any(tier.rows is None for tier in self.tiers[:-1]):
-            msg = "only the last (outermost) tier may use rows: null to fill the space"
-            raise ConfigError(msg)
         if self.ring.platform_m >= min(self.room.width_m, self.room.depth_m):
             msg = "the ring does not fit in the room"
+            raise ConfigError(msg)
+        if self.bleachers.depth_m + self.ring.platform_m / 2 >= self.room.width_m / 2:
+            msg = "the bleachers reach the ring"
             raise ConfigError(msg)
 
 
@@ -196,21 +236,36 @@ def _measurements[T](cls: type[T], raw: JsonObject, key: str) -> T:
     return cls(**{name: _number(key, data, name) for name in names})
 
 
+def _whole_or_null(section: str, data: JsonObject, key: str) -> int | None:
+    value = data[key]
+    if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
+        msg = f"{section}.{key} must be a whole number or null, got {value!r}"
+        raise ConfigError(msg)
+    return value
+
+
+def _sides(section: str, data: JsonObject) -> tuple[Side, ...]:
+    value = data["sides"]
+    valid = [side.value for side in Side]
+    if not isinstance(value, list) or any(item not in valid for item in value):
+        msg = f"{section}.sides must be a list drawn from {valid}, got {value!r}"
+        raise ConfigError(msg)
+    return tuple(Side(item) for item in value)
+
+
 def _tier(data: object, index: int) -> TierSpec:
     section = f"tiers[{index}]"
     if not isinstance(data, dict):
         msg = f"{section} must be an object"
         raise ConfigError(msg)
     tier = {str(k): v for k, v in data.items()}
-    _check_keys(section, tier, {"name", "colour", "rows", "gap_before_m"})
-    rows = tier["rows"]
-    if rows is not None and (isinstance(rows, bool) or not isinstance(rows, int)):
-        msg = f"{section}.rows must be a whole number or null, got {rows!r}"
-        raise ConfigError(msg)
+    _check_keys(section, tier, {"name", "colour", "sides", "target_seats", "rows", "gap_before_m"})
     return TierSpec(
         name=_text(section, tier, "name"),
         colour=_text(section, tier, "colour"),
-        rows=rows,
+        sides=_sides(section, tier),
+        target_seats=_whole_or_null(section, tier, "target_seats"),
+        rows=_whole_or_null(section, tier, "rows"),
         gap_before_m=_number(section, tier, "gap_before_m"),
     )
 
@@ -220,7 +275,7 @@ def parse_event(raw: JsonObject) -> EventSpec:
     _check_keys(
         "event",
         raw,
-        {"title", "date", "room", "ring", "walkway", "tunnel", "seats", "tiers"},
+        {"title", "date", "room", "ring", "walkway", "tunnel", "bleachers", "seats", "tiers"},
     )
     tiers = raw["tiers"]
     if not isinstance(tiers, list):
@@ -233,6 +288,7 @@ def parse_event(raw: JsonObject) -> EventSpec:
         ring=_measurements(RingSpec, raw, "ring"),
         walkway=_measurements(WalkwaySpec, raw, "walkway"),
         tunnel=_measurements(TunnelSpec, raw, "tunnel"),
+        bleachers=_measurements(BleacherSpec, raw, "bleachers"),
         seats=_measurements(SeatSpec, raw, "seats"),
         tiers=tuple(_tier(tier, i) for i, tier in enumerate(tiers)),
     )

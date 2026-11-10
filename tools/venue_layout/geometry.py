@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 _EPSILON = 1e-9
+
+
+def whole_fits(length: float, size: float) -> int:
+    """How many items of ``size`` fit in ``length``, ignoring floating-point dust."""
+    return max(math.floor(length / size + _EPSILON), 0)
 
 
 @dataclass(frozen=True)

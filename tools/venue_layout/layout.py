@@ -1,13 +1,12 @@
-"""Work out where the ring, walkway, tunnel and every chair go."""
+"""Work out where the ring, walkway, tunnel, bleachers and every floor chair go."""
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from venue_layout.geometry import Rect
+from venue_layout.config import Side
+from venue_layout.geometry import Rect, whole_fits
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -17,15 +16,6 @@ if TYPE_CHECKING:
 
 class LayoutError(ValueError):
     """Raised when the requested tiers cannot physically fit in the room."""
-
-
-class Side(StrEnum):
-    """Which side of the ring a seat faces from."""
-
-    TOP = "top"
-    BOTTOM = "bottom"
-    LEFT = "left"
-    RIGHT = "right"
 
 
 @dataclass(frozen=True)
@@ -49,10 +39,12 @@ class Layout:
     ropes: Rect
     walkway: Rect
     tunnel: Rect
+    bleachers: tuple[Rect, ...]
+    bleacher_capacity: int
     seats: tuple[Seat, ...]
 
     def count(self, tier: str) -> int:
-        """Number of chairs in ``tier``."""
+        """Number of floor chairs in ``tier``."""
         return sum(1 for seat in self.seats if seat.tier == tier)
 
     def rows(self, tier: str) -> int:
@@ -60,22 +52,23 @@ class Layout:
         return max((seat.row for seat in self.seats if seat.tier == tier), default=0)
 
 
-def _row_strips(ring: Rect, offset: float, seats: SeatSpec) -> Iterator[tuple[Side, Rect]]:
-    """Yield the four strips of floor for one row of chairs ``offset`` metres from the ring.
+def _strip(side: Side, ring: Rect, offset: float, seats: SeatSpec) -> Rect | None:
+    """The strip of floor for one row on ``side``, ``offset`` metres out from the ring.
 
-    Each strip stops ``corner_aisle_m`` short of the corner so a diagonal aisle runs out
+    The strip stops ``corner_aisle_m`` short of each corner so a diagonal aisle runs out
     from every corner of the ring.
     """
     depth = seats.row_depth_m
     reach = offset - seats.corner_aisle_m
-    across = ring.width + 2 * reach
-    down = ring.height + 2 * reach
-    if across <= 0 or down <= 0:
-        return
-    yield Side.TOP, Rect(ring.x - reach, ring.y - offset - depth, across, depth)
-    yield Side.BOTTOM, Rect(ring.x - reach, ring.bottom + offset, across, depth)
-    yield Side.LEFT, Rect(ring.x - offset - depth, ring.y - reach, depth, down)
-    yield Side.RIGHT, Rect(ring.right + offset, ring.y - reach, depth, down)
+    length = ring.width + 2 * reach
+    if length <= 0:
+        return None
+    return {
+        Side.TOP: Rect(ring.x - reach, ring.y - offset - depth, length, depth),
+        Side.BOTTOM: Rect(ring.x - reach, ring.bottom + offset, length, depth),
+        Side.LEFT: Rect(ring.x - offset - depth, ring.y - reach, depth, length),
+        Side.RIGHT: Rect(ring.right + offset, ring.y - reach, depth, length),
+    }[side]
 
 
 def _blocks(
@@ -96,7 +89,7 @@ def _blocks(
 
 def _chairs_along(start: float, end: float, width: float) -> list[float]:
     """Positions of as many chairs as fit in ``start..end``, centred within it."""
-    count = math.floor((end - start) / width + 1e-9)
+    count = whole_fits(end - start, width)
     if count <= 0:
         return []
     first = start + ((end - start) - count * width) / 2
@@ -118,71 +111,131 @@ def _strip_chairs(side: Side, strip: Rect, ring: Rect, seats: SeatSpec) -> Itera
                 yield Rect(strip.x, pos, strip.width, seats.width_m)
 
 
-@dataclass(frozen=True)
+def _best_first(row: list[Seat], ring: Rect) -> list[Seat]:
+    """Order a row so any prefix of it is spread evenly over the sides, centre seats first.
+
+    Seats are dealt round-robin from each side, nearest the middle of that side first, so
+    trimming the last row of a tier leaves a tidy centred block on every side.
+    """
+    cx, cy = ring.centre
+
+    def off_centre(seat: Seat) -> tuple[float, float, float]:
+        sx, sy = seat.rect.centre
+        along = sx - cx if seat.side in {Side.TOP, Side.BOTTOM} else sy - cy
+        return (round(abs(along), 6), sx, sy)
+
+    by_side = [sorted((s for s in row if s.side == side), key=off_centre) for side in Side]
+    longest = max(map(len, by_side), default=0)
+    return [queue[i] for i in range(longest) for queue in by_side if i < len(queue)]
+
+
+@dataclass
 class _Floor:
+    """Mutable placement state: what is placed so far and how deep each side has got."""
+
     ring: Rect
     seating_area: Rect
     keep_out: tuple[Rect, ...]
     seats: SeatSpec
+    depth: dict[Side, float]
+    placed: list[Seat]
 
-    def row(self, tier: str, row: int, offset: float) -> list[Seat]:
-        placed: list[Seat] = []
-        for side, strip in _row_strips(self.ring, offset, self.seats):
-            placed += [
-                Seat(tier, row, side, chair)
-                for chair in _strip_chairs(side, strip, self.ring, self.seats)
-                if self.seating_area.contains(chair)
-                and not any(chair.overlaps(zone) for zone in self.keep_out)
-            ]
-        return placed
+    def _free(self, chair: Rect, tier: TierSpec) -> bool:
+        if not self.seating_area.contains(chair):
+            return False
+        if any(chair.overlaps(zone) for zone in self.keep_out):
+            return False
+        return not any(
+            chair.overlaps(
+                seat.rect if seat.tier == tier.name else seat.rect.inset(-tier.gap_before_m)
+            )
+            for seat in self.placed
+        )
 
+    def row(self, tier: TierSpec, row: int) -> list[Seat]:
+        """Chairs for one row of ``tier`` on each of its sides, then step those sides out."""
+        found: list[Seat] = []
+        for side in tier.sides:
+            strip = _strip(side, self.ring, self.depth[side], self.seats)
+            if strip is not None:
+                found += [
+                    Seat(tier.name, row, side, chair)
+                    for chair in _strip_chairs(side, strip, self.ring, self.seats)
+                    if self._free(chair, tier)
+                ]
+            self.depth[side] += self.seats.row_depth_m
+        return found
 
-def _place_tier(floor: _Floor, tier: TierSpec, offset: float) -> tuple[list[Seat], float]:
-    """Place every row of ``tier`` starting ``offset`` metres out; return seats and new offset."""
-    seats: list[Seat] = []
-    row = 0
-    while tier.rows is None or row < tier.rows:
-        placed = floor.row(tier.name, row + 1, offset)
-        if not placed:
-            if tier.rows is None:
+    def place(self, tier: TierSpec) -> None:
+        """Add rows for ``tier`` until its target, row limit or the walls are reached."""
+        for side in tier.sides:
+            self.depth[side] += tier.gap_before_m
+        total = 0
+        row = 0
+        while tier.rows is None or row < tier.rows:
+            row += 1
+            found = _best_first(self.row(tier, row), self.ring)
+            if not found:
                 break
-            msg = f"tier {tier.name!r} row {row + 1} does not fit in the room"
+            if tier.target_seats is not None:
+                found = found[: tier.target_seats - total]
+            self.placed += found
+            total += len(found)
+            if total == tier.target_seats:
+                return
+        if tier.target_seats is not None or total == 0:
+            wanted = tier.target_seats or 1
+            msg = f"tier {tier.name!r} only fits {total} of {wanted} seats"
             raise LayoutError(msg)
-        seats += placed
-        offset += floor.seats.row_depth_m
-        row += 1
-    return seats, offset
+
+
+def _bleachers(event: EventSpec, tunnel: Rect, room: Rect) -> tuple[Rect, Rect]:
+    """The stand against the left wall, split in two by the tunnel."""
+    spec = event.bleachers
+    stand = Rect.centred(spec.depth_m / 2, room.centre[1], spec.depth_m, spec.length_m)
+    return (
+        Rect(stand.x, stand.y, stand.width, tunnel.y - stand.y),
+        Rect(stand.x, tunnel.bottom, stand.width, stand.bottom - tunnel.bottom),
+    )
+
+
+def _bleacher_capacity(event: EventSpec, halves: tuple[Rect, Rect]) -> int:
+    """Rough capacity: whole rows times whole seats per row, in both halves."""
+    spec = event.bleachers
+    return sum(spec.steps * whole_fits(half.height, spec.seat_width_m) for half in halves)
 
 
 def build_layout(event: EventSpec) -> Layout:
-    """Place the ring in the centre, the walkway and tunnel on the left, and seat every tier."""
+    """Place the ring in the centre, walkway, tunnel and bleachers on the left, then seat tiers."""
     room = Rect(0, 0, event.room.width_m, event.room.depth_m)
     cx, cy = room.centre
     ring = Rect.centred(cx, cy, event.ring.platform_m, event.ring.platform_m)
-    ropes = Rect.centred(cx, cy, event.ring.ropes_m, event.ring.ropes_m)
     walkway = Rect(0, cy - event.walkway.width_m / 2, ring.x, event.walkway.width_m)
     tunnel = Rect(0, cy - event.tunnel.width_m / 2, event.tunnel.depth_m, event.tunnel.width_m)
+    bleachers = _bleachers(event, tunnel, room)
+    aisle = event.room.perimeter_aisle_m
+    floor_left = event.bleachers.depth_m + aisle
     floor = _Floor(
         ring=ring,
-        seating_area=room.inset(event.room.perimeter_aisle_m),
+        seating_area=Rect(
+            floor_left, aisle, room.width - floor_left - aisle, room.height - 2 * aisle
+        ),
         keep_out=(walkway.grow_vertically(event.walkway.barrier_m), tunnel),
         seats=event.seats,
+        depth=dict.fromkeys(Side, event.ring.clearance_m),
+        placed=[],
     )
-    seats: list[Seat] = []
-    offset = event.ring.clearance_m
     for tier in event.tiers:
-        placed, offset = _place_tier(floor, tier, offset + tier.gap_before_m)
-        if not placed:
-            msg = f"tier {tier.name!r} has no room for any seats"
-            raise LayoutError(msg)
-        seats += placed
+        floor.place(tier)
     return Layout(
         event=event,
         room=room,
         seating_area=floor.seating_area,
         ring=ring,
-        ropes=ropes,
+        ropes=Rect.centred(cx, cy, event.ring.ropes_m, event.ring.ropes_m),
         walkway=walkway,
         tunnel=tunnel,
-        seats=tuple(seats),
+        bleachers=bleachers,
+        bleacher_capacity=_bleacher_capacity(event, bleachers),
+        seats=tuple(floor.placed),
     )

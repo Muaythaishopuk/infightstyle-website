@@ -1,6 +1,6 @@
 import pytest
 
-from venue_layout.geometry import Rect
+from venue_layout.geometry import Rect, whole_fits
 
 
 def test_edges_and_centre() -> None:
@@ -40,3 +40,9 @@ def test_inset_and_grow() -> None:
     assert Rect(0, 0, 10, 6).inset(1) == Rect(1, 1, 8, 4)
     assert Rect(0, 0, 2, 2).inset(5) == Rect(5, 5, 0, 0)
     assert Rect(0, 2, 4, 1).grow_vertically(0.5) == Rect(0, 1.5, 4, 2)
+
+
+def test_whole_fits() -> None:
+    assert whole_fits(3.0, 0.75) == 4  # exact fit despite floating point
+    assert whole_fits(1.0, 0.3) == 3
+    assert whole_fits(-1.0, 0.5) == 0

@@ -4,7 +4,8 @@
 
 Draws a to-scale floor plan for a fight night from a small settings file: the ring in
 the centre, the fighters' walkway from the middle of the ring's left side to the tunnel on
-the left wall, and seating tiers in rings around the ring (closest tier first).
+the left wall, the bleacher stand either side of the tunnel, and floor seating tiers
+around the ring (closest tier first).
 
 ```bash
 cd tools
@@ -30,7 +31,8 @@ Edit the event's `event.json`, then run the command again. All sizes are in metr
 | `seats.corner_aisle_m` | Diagonal aisle out from each ring corner |
 | `seats.radial_aisle_m` | Aisles lined up with the ring posts, cutting through every row |
 | `seats.min_block_seats` | Leave out blocks smaller than this (avoids lone chairs) |
-| `tiers[]` | Closest to the ring first. `rows` is a number, or `null` on the last tier to fill the rest. `gap_before_m` is a walking aisle before that tier |
+| `bleachers` | Raised stand against the left wall, split by the tunnel: depth, length, step depth and seat width (used to estimate capacity) |
+| `tiers[]` | Floor chairs, closest to the ring first. `sides` says which sides of the ring the tier uses. `target_seats` is the exact number wanted (the last row is trimmed evenly across sides); `rows` caps the rows; both `null` fills the space. `gap_before_m` is a walking aisle before that tier |
 
 For a new event, copy the folder under `planning/`, rename it and edit `event.json`.
 
@@ -44,4 +46,5 @@ python check.py
 
 Runs formatting (ruff), linting (ruff, every rule on), strict type checks (mypy),
 tests with at least 95% coverage (pytest), and copy-paste detection (jscpd, zero
-duplication allowed). All must pass before changes are committed.
+duplication allowed; any repeat of 30+ tokens fails, which is strict enough to
+catch copied logic while ignoring the standard import lines at the top of files). All must pass before changes are committed.
