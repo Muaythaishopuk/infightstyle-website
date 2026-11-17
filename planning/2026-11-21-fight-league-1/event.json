@@ -7,8 +7,8 @@
     "perimeter_aisle_m": 1.2
   },
   "ring": {
-    "platform_m": 7.0,
-    "ropes_m": 6.0,
+    "platform_m": 6.1,
+    "ropes_m": 5.49,
     "clearance_m": 2.0
   },
   "walkway": {
@@ -29,25 +29,15 @@
   },
   "tiers": [
     {
-      "name": "Standard",
-      "colour": "#60a5fa",
-      "sides": [
-        "left"
-      ],
-      "target_seats": 150,
-      "rows": null,
-      "gap_before_m": 0,
-      "straight_rows": true
-    },
-    {
       "name": "Ringside",
       "colour": "#d4af37",
       "sides": [
         "top",
         "bottom",
+        "left",
         "right"
       ],
-      "target_seats": 150,
+      "target_seats": 200,
       "rows": null,
       "gap_before_m": 0,
       "straight_rows": false
@@ -58,9 +48,10 @@
       "sides": [
         "top",
         "bottom",
+        "left",
         "right"
       ],
-      "target_seats": 200,
+      "target_seats": 250,
       "rows": null,
       "gap_before_m": 0.6,
       "straight_rows": false

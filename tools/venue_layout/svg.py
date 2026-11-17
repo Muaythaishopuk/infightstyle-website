@@ -123,7 +123,7 @@ def _bleachers(layout: Layout) -> list[str]:
             for row in range(1, rows)
         ]
         parts.append(
-            _centred_label(half, "BLEACHERS (raised)", size=12, colour="#0f172a", rotate=True)
+            _centred_label(half, "BLEACHERS - STANDARD", size=12, colour="#0f172a", rotate=True)
         )
     return parts
 
@@ -166,7 +166,7 @@ def _legend(layout: Layout, left_px: float) -> list[str]:
         (tier.colour, f"{tier.name} (floor): {layout.count(tier.name)} seats")
         for tier in event.tiers
     ]
-    entries.append((BLEACHER_FILL, f"Bleachers: about {layout.bleacher_capacity} (estimate)"))
+    entries.append((BLEACHER_FILL, f"Standard (bleachers): about {layout.bleacher_capacity}"))
     y = 100.0
     for colour, summary in entries:
         parts.append(
