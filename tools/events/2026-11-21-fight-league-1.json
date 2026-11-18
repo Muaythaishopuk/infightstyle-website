@@ -1,0 +1,27 @@
+{
+  "name": "INFIGHTSTYLE Fight League #1, 21 November 2026",
+  "output_tab": "Running order",
+  "start_time": "13:00",
+  "classes": [
+    {"code": "N", "label": "N Class", "minutes": 15},
+    {"code": "C", "label": "C Class", "minutes": 15},
+    {"code": "B", "label": "B Class", "minutes": 20},
+    {"code": "A", "label": "A Class", "minutes": 30}
+  ],
+  "sources": [
+    {
+      "tab": "Undercard - ",
+      "billing": "listed",
+      "header_rows": 1,
+      "columns": {"red_gym": 2, "red_name": 3, "fight_class": 5, "blue_name": 9, "blue_gym": 10}
+    },
+    {
+      "tab": "Main card ",
+      "billing": "headliner_first",
+      "header_rows": 1,
+      "columns": {"fight_class": 1, "red_gym": 2, "red_name": 4, "blue_name": 6, "blue_gym": 8}
+    }
+  ],
+  "red_corner_gyms": ["GFC Muay Thai"],
+  "red_corner_fighters": ["Jake Newman", "Karl Ryan"]
+}
