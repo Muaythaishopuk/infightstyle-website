@@ -106,6 +106,20 @@
   "poster": {
     "title": "RUNNING ORDER",
     "subtitle": "FIGHT LEAGUE #1  •  SATURDAY 21 NOVEMBER",
-    "font": "/usr/share/fonts/opentype/inter/InterDisplay-BlackItalic.otf"
+    "font": "/usr/share/fonts/opentype/inter/InterDisplay-BlackItalic.otf",
+    "headliners": [
+      {
+        "label": "MAIN EVENT",
+        "title": "WMO WORLD TITLE"
+      },
+      {
+        "label": "CO-MAIN EVENT",
+        "title": "WMO EUROPEAN TITLE"
+      }
+    ],
+    "main_card_classes": [
+      "A",
+      "B"
+    ]
   }
 }

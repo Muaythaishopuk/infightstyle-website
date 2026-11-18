@@ -35,4 +35,10 @@ def test_fight_league_one_settings() -> None:
         "Mohsin Mazhar": 13,
     }
     assert config.default_gym_gap == 2
+    assert config.poster is not None
+    assert config.poster.headliners == (
+        ("MAIN EVENT", "WMO WORLD TITLE"),
+        ("CO-MAIN EVENT", "WMO EUROPEAN TITLE"),
+    )
+    assert config.poster.main_card_classes == ("A", "B")
     assert config.gym_gaps == {"GFC Muay Thai": 1}

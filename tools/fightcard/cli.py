@@ -23,7 +23,7 @@ from fightcard.corners import assign_corners
 from fightcard.formatting import format_requests
 from fightcard.ordering import OrderRules, arrange
 from fightcard.parsing import parse_source
-from fightcard.poster import PosterStyle, poster_lines, render
+from fightcard.poster import Headliner, PosterStyle, poster_lines, render
 from fightcard.schedule import build_schedule, order_by_class
 from fightcard.sheet import build_grid, slot_lengths
 from fightcard.weighin import build_grid as build_weigh_in_grid
@@ -134,7 +134,9 @@ def _poster(
         msg = "--poster-out needs --poster-background and a 'poster' block in the event file."
         raise PosterSettingsError(msg)
     style = PosterStyle(font=Path(settings.font), title=settings.title, subtitle=settings.subtitle)
-    render(poster_lines(slots, style.labels), background, out, style)
+    headliners = [Headliner(label, title) for label, title in settings.headliners]
+    lines = poster_lines(slots, headliners, settings.main_card_classes)
+    render(lines, background, out, style)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

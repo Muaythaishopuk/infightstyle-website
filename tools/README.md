@@ -5,8 +5,9 @@ Builds three things for a fight night from the event spreadsheet:
 1. the **Running order** tab;
 2. the **Weigh in** tab for the weigh-in coordinator (last bout first, red then blue, with
    weight, allowance, limit, a box for the recorded weight and a Yes/No result);
-3. the public **running-order post** for Instagram (main and co-main event at the top, larger,
-   then every other bout down to the first; fighter names only).
+3. the public **running-order post** for Instagram, fighter names only, from the main event
+   down to fight 1 in three sizes: headliners under a title banner (`poster.headliners`),
+   the rest of the main card (`poster.main_card_classes`), then the undercard.
 
 The running order:
 

@@ -63,6 +63,8 @@ class PosterConfig:
     title: str
     subtitle: str
     font: str
+    headliners: tuple[tuple[str, str], ...] = ()
+    main_card_classes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -104,6 +106,18 @@ def _weigh_in(raw: dict[str, Any] | None) -> WeighInConfig | None:
     )
 
 
+def _poster(raw: dict[str, Any] | None) -> PosterConfig | None:
+    if raw is None:
+        return None
+    return PosterConfig(
+        title=raw["title"],
+        subtitle=raw["subtitle"],
+        font=raw["font"],
+        headliners=tuple((h["label"], h["title"]) for h in raw.get("headliners", ())),
+        main_card_classes=tuple(raw.get("main_card_classes", ())),
+    )
+
+
 def parse_config(raw: dict[str, Any]) -> EventConfig:
     """Build an EventConfig from already-decoded JSON."""
     return EventConfig(
@@ -119,7 +133,7 @@ def parse_config(raw: dict[str, Any]) -> EventConfig:
         gym_gaps={k: int(v) for k, v in raw.get("gym_gaps", {}).items()},
         default_gym_gap=int(raw.get("default_gym_gap", 0)),
         weigh_in=_weigh_in(raw.get("weigh_in")),
-        poster=PosterConfig(**raw["poster"]) if "poster" in raw else None,
+        poster=_poster(raw.get("poster")),
     )
 
 
