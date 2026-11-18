@@ -1,27 +1,101 @@
 {
   "name": "INFIGHTSTYLE Fight League #1, 21 November 2026",
   "output_tab": "Running order",
-  "start_time": "13:00",
+  "start_time": "13:30",
   "classes": [
-    {"code": "N", "label": "N Class", "minutes": 15},
-    {"code": "C", "label": "C Class", "minutes": 15},
-    {"code": "B", "label": "B Class", "minutes": 20},
-    {"code": "A", "label": "A Class", "minutes": 30}
+    {
+      "code": "N",
+      "label": "N Class",
+      "minutes": 20
+    },
+    {
+      "code": "C",
+      "label": "C Class",
+      "minutes": 20
+    },
+    {
+      "code": "B",
+      "label": "B Class",
+      "minutes": 25
+    },
+    {
+      "code": "A",
+      "label": "A Class",
+      "minutes": 30
+    }
+  ],
+  "intervals": [
+    {
+      "after_class": "N",
+      "label": "Interval 1",
+      "minutes": 20
+    },
+    {
+      "after_class": "C",
+      "label": "Interval 2",
+      "minutes": 20
+    }
   ],
   "sources": [
     {
-      "tab": "Undercard - ",
+      "tab": "Running order",
       "billing": "listed",
       "header_rows": 1,
-      "columns": {"red_gym": 2, "red_name": 3, "fight_class": 5, "blue_name": 9, "blue_gym": 10}
-    },
-    {
-      "tab": "Main card ",
-      "billing": "headliner_first",
-      "header_rows": 1,
-      "columns": {"fight_class": 1, "red_gym": 2, "red_name": 4, "blue_name": 6, "blue_gym": 8}
+      "columns": {
+        "fight_class": 3,
+        "red_name": 4,
+        "red_gym": 5,
+        "blue_name": 6,
+        "blue_gym": 7
+      }
     }
   ],
-  "red_corner_gyms": ["GFC Muay Thai"],
-  "red_corner_fighters": ["Jake Newman", "Karl Ryan"]
+  "red_corner_gyms": [
+    "GFC Muay Thai"
+  ],
+  "red_corner_fighters": [
+    "Jake Newman",
+    "Karl Ryan",
+    "Max Manley"
+  ],
+  "weigh_in": {
+    "output_tab": "Weigh in",
+    "default_allowance_kg": 0.5,
+    "allowance_overrides_kg": {
+      "Jake Newman": 0,
+      "Louie Doherty": 0,
+      "Karl Ryan": 0,
+      "Brooks Sowerby": 0
+    },
+    "weight_sources": [
+      {
+        "tab": "Undercard - ",
+        "billing": "listed",
+        "header_rows": 1,
+        "columns": {
+          "red_gym": 2,
+          "red_name": 3,
+          "red_weight": 4,
+          "fight_class": 5,
+          "blue_weight": 8,
+          "blue_name": 9,
+          "blue_gym": 10
+        }
+      },
+      {
+        "tab": "Main card ",
+        "billing": "listed",
+        "header_rows": 1,
+        "columns": {
+          "fight_class": 1,
+          "red_gym": 2,
+          "red_weight": 3,
+          "red_name": 4,
+          "blue_name": 6,
+          "blue_weight": 7,
+          "blue_gym": 8
+        }
+      }
+    ]
+  }
 }

@@ -3,10 +3,21 @@
   "minLines": 3,
   "minTokens": 25,
   "mode": "strict",
-  "format": ["python", "json"],
-  "path": ["fightcard", "tests", "events"],
-  "ignore": ["**/__pycache__/**"],
-  "reporters": ["console"],
+  "format": [
+    "python",
+    "json"
+  ],
+  "path": [
+    "fightcard",
+    "tests",
+    "events"
+  ],
+  "ignore": [
+    "**/__pycache__/**"
+  ],
+  "reporters": [
+    "console"
+  ],
   "absolute": false,
   "exitCode": 1
 }

@@ -26,6 +26,7 @@ class Fighter:
 
     name: str
     gym: str
+    weight: str = ""
 
 
 @dataclass(frozen=True)

@@ -21,6 +21,15 @@ class FightClass:
     minutes: int
 
 
+@dataclass(frozen=True)
+class Interval:
+    """A break in the running order, taken after the last bout of ``after_class``."""
+
+    after_class: str
+    label: str
+    minutes: int
+
+
 def parse_class_code(text: str) -> str | None:
     """Return the class letter from text such as " c class pro ", or None if absent."""
     match = _CLASS_PATTERN.match(text)

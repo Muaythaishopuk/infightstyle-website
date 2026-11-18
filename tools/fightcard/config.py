@@ -8,7 +8,7 @@ from datetime import time
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from fightcard.classes import FightClass
+from fightcard.classes import FightClass, Interval
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,6 +32,8 @@ class Columns:
     red_gym: int
     blue_name: int
     blue_gym: int
+    red_weight: int | None = None
+    blue_weight: int | None = None
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,16 @@ class SourceTab:
 
 
 @dataclass(frozen=True)
+class WeighInConfig:
+    """Settings for the weigh-in coordinator's tab."""
+
+    output_tab: str
+    default_allowance_kg: float
+    allowance_overrides_kg: dict[str, float]
+    weight_sources: tuple[SourceTab, ...]
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Everything needed to build one event's running order."""
 
@@ -52,9 +64,11 @@ class EventConfig:
     output_tab: str
     start_time: time
     classes: tuple[FightClass, ...]
+    intervals: tuple[Interval, ...]
     sources: tuple[SourceTab, ...]
     red_corner_gyms: tuple[str, ...]
     red_corner_fighters: tuple[str, ...]
+    weigh_in: WeighInConfig | None = None
 
 
 def _source(raw: dict[str, Any]) -> SourceTab:
@@ -66,6 +80,17 @@ def _source(raw: dict[str, Any]) -> SourceTab:
     )
 
 
+def _weigh_in(raw: dict[str, Any] | None) -> WeighInConfig | None:
+    if raw is None:
+        return None
+    return WeighInConfig(
+        output_tab=raw["output_tab"],
+        default_allowance_kg=float(raw["default_allowance_kg"]),
+        allowance_overrides_kg={k: float(v) for k, v in raw["allowance_overrides_kg"].items()},
+        weight_sources=tuple(_source(s) for s in raw["weight_sources"]),
+    )
+
+
 def parse_config(raw: dict[str, Any]) -> EventConfig:
     """Build an EventConfig from already-decoded JSON."""
     return EventConfig(
@@ -73,9 +98,11 @@ def parse_config(raw: dict[str, Any]) -> EventConfig:
         output_tab=raw["output_tab"],
         start_time=time.fromisoformat(raw["start_time"]),
         classes=tuple(FightClass(**c) for c in raw["classes"]),
+        intervals=tuple(Interval(**i) for i in raw.get("intervals", ())),
         sources=tuple(_source(s) for s in raw["sources"]),
         red_corner_gyms=tuple(raw.get("red_corner_gyms", ())),
         red_corner_fighters=tuple(raw.get("red_corner_fighters", ())),
+        weigh_in=_weigh_in(raw.get("weigh_in")),
     )
 
 

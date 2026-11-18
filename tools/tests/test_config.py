@@ -17,12 +17,14 @@ def test_every_event_file_loads() -> None:
 
 def test_fight_league_one_settings() -> None:
     config = load_config(EVENTS / "2026-11-21-fight-league-1.json")
-    assert config.start_time == time(13, 0)
+    assert config.start_time == time(13, 30)
     assert [(c.code, c.minutes) for c in config.classes] == [
-        ("N", 15),
-        ("C", 15),
-        ("B", 20),
+        ("N", 20),
+        ("C", 20),
+        ("B", 25),
         ("A", 30),
     ]
-    assert config.sources[1].billing is Billing.HEADLINER_FIRST
-    assert config.red_corner_fighters == ("Jake Newman", "Karl Ryan")
+    assert [(i.after_class, i.minutes) for i in config.intervals] == [("N", 20), ("C", 20)]
+    assert config.sources[0].tab == "Running order"
+    assert config.sources[0].billing is Billing.LISTED
+    assert config.red_corner_fighters == ("Jake Newman", "Karl Ryan", "Max Manley")

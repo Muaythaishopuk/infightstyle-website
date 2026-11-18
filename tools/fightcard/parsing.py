@@ -19,8 +19,9 @@ def _cell(row: Row, index: int) -> str:
     return row[index].strip() if index < len(row) else ""
 
 
-def _fighter(row: Row, name_col: int, gym_col: int) -> Fighter:
-    return Fighter(name=_cell(row, name_col) or TBC, gym=_cell(row, gym_col))
+def _fighter(row: Row, name_col: int, gym_col: int, weight_col: int | None) -> Fighter:
+    weight = "" if weight_col is None else _cell(row, weight_col)
+    return Fighter(name=_cell(row, name_col) or TBC, gym=_cell(row, gym_col), weight=weight)
 
 
 def parse_source(source: SourceTab, rows: Sequence[Row]) -> BoutsResult:
@@ -36,8 +37,8 @@ def parse_source(source: SourceTab, rows: Sequence[Row]) -> BoutsResult:
         if code is None:
             continue
         bout = Bout(
-            red=_fighter(row, cols.red_name, cols.red_gym),
-            blue=_fighter(row, cols.blue_name, cols.blue_gym),
+            red=_fighter(row, cols.red_name, cols.red_gym, cols.red_weight),
+            blue=_fighter(row, cols.blue_name, cols.blue_gym, cols.blue_weight),
             fight_class=code,
             source=source.tab.strip(),
         )

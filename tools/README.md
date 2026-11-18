@@ -42,7 +42,7 @@ rebuilt whenever the card changes.
 | `ruff format` | one code style everywhere |
 | `ruff check` | every rule set enabled (`select = ["ALL"]`) |
 | `mypy --strict` | full type annotations, no `Any` leaks |
-| `pytest` | 100% line and branch coverage required |
+| `pytest` | 100% line and branch coverage required, including a rebuild-from-own-output check |
 | `jscpd` | zero duplicated blocks (threshold 0%, 3 lines / 25 tokens) |
 
 Install the tools with `pip install -e ".[dev]"`; `jscpd` runs through `npx`.

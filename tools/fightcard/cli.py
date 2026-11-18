@@ -23,12 +23,16 @@ from fightcard.corners import assign_corners
 from fightcard.formatting import format_requests
 from fightcard.parsing import parse_source
 from fightcard.schedule import build_schedule
-from fightcard.sheet import build_grid
+from fightcard.sheet import build_grid, slot_lengths
+from fightcard.weighin import build_grid as build_weigh_in_grid
+from fightcard.weighin import build_rows
+from fightcard.weighin import format_requests as weigh_in_requests
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fightcard.config import EventConfig
+    from fightcard.config import EventConfig, SourceTab, WeighInConfig
+    from fightcard.models import Bout
     from fightcard.schedule import Slot
 
 
@@ -53,29 +57,65 @@ def _rows(path: Path) -> list[list[str]]:
     return rows
 
 
-def plan(config: EventConfig, sources: dict[str, Path]) -> tuple[list[Slot], list[str]]:
-    """Read, correct corners and schedule every bout of the event."""
-    bouts = []
-    warnings: list[str] = []
-    for source in config.sources:
+def _read(
+    tabs: Sequence[SourceTab], sources: dict[str, Path], warnings: list[str] | None
+) -> list[Bout]:
+    bouts: list[Bout] = []
+    for source in tabs:
         if source.tab not in sources:
             msg = f"No --source given for tab {source.tab!r}."
             raise MissingSourceError(msg)
         parsed = parse_source(source, _rows(sources[source.tab]))
         bouts.extend(parsed.bouts)
-        warnings.extend(parsed.warnings)
+        if warnings is not None:
+            warnings.extend(parsed.warnings)
+    return bouts
+
+
+def plan(config: EventConfig, sources: dict[str, Path]) -> tuple[list[Slot], list[str]]:
+    """Read, correct corners and schedule every bout of the event."""
+    warnings: list[str] = []
+    bouts = _read(config.sources, sources, warnings)
     corners = assign_corners(bouts, config.red_corner_gyms, config.red_corner_fighters)
     warnings.extend(corners.warnings)
-    return build_schedule(corners.bouts, config.classes, config.start_time), warnings
+    slots = build_schedule(corners.bouts, config.classes, config.start_time, config.intervals)
+    return slots, warnings
 
 
 def preview(slots: Sequence[Slot]) -> list[str]:
     """One readable line per bout, for checking the result by eye."""
-    return [
-        f"{s.number:>2}  {s.start:%H:%M}-{s.finish:%H:%M}  {s.fight_class.label:<8}  "
-        f"RED {s.bout.red.name} ({s.bout.red.gym})  vs  BLUE {s.bout.blue.name} ({s.bout.blue.gym})"
-        for s in slots
-    ]
+    return [_preview_line(slot) for slot in slots]
+
+
+def _preview_line(slot: Slot) -> str:
+    times = f"{slot.start:%H:%M}-{slot.finish:%H:%M}  {slot.label:<10}"
+    if slot.bout is None:
+        return f"    {times}"
+    red, blue = slot.bout.red, slot.bout.blue
+    return (
+        f"{slot.number:>2}  {times}  RED {red.name} ({red.gym})  vs  BLUE {blue.name} ({blue.gym})"
+    )
+
+
+def _weigh_in(
+    weigh_in: WeighInConfig,
+    sources: dict[str, Path],
+    slots: Sequence[Slot],
+    sheet_id: int | None,
+    warnings: list[str],
+) -> dict[str, Any]:
+    weight_bouts = _read(weigh_in.weight_sources, sources, None)
+    rows, row_warnings = build_rows(
+        slots, weight_bouts, weigh_in.default_allowance_kg, weigh_in.allowance_overrides_kg
+    )
+    warnings.extend(row_warnings)
+    result: dict[str, Any] = {
+        "range": f"'{weigh_in.output_tab}'!A1",
+        "values": build_weigh_in_grid(rows),
+    }
+    if sheet_id is not None:
+        result["requests"] = weigh_in_requests(sheet_id, rows)
+    return result
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -84,18 +124,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("event", type=Path, help="event settings JSON from events/")
     parser.add_argument("--source", action="append", default=[], help="TAB=get_values.json")
     parser.add_argument("--out", type=Path, required=True, help="where to write the payload")
-    parser.add_argument("--sheet-id", type=int, help="numeric id of the output tab")
+    parser.add_argument("--sheet-id", type=int, help="numeric id of the running-order tab")
+    parser.add_argument("--weigh-in-sheet-id", type=int, help="numeric id of the weigh-in tab")
     args = parser.parse_args(argv)
 
     config = load_config(args.event)
-    slots, warnings = plan(config, _parse_sources(args.source))
+    sources = _parse_sources(args.source)
+    slots, warnings = plan(config, sources)
+    lengths = slot_lengths(config.classes, config.intervals)
     payload: dict[str, Any] = {
         "range": f"'{config.output_tab}'!A1",
-        "values": build_grid(slots, config.classes, config.start_time),
+        "values": build_grid(slots, lengths, config.start_time),
         "warnings": warnings,
     }
     if args.sheet_id is not None:
-        payload["requests"] = format_requests(args.sheet_id, len(slots), len(config.classes))
+        payload["requests"] = format_requests(args.sheet_id, slots, len(lengths))
+    if config.weigh_in is not None:
+        payload["weigh_in"] = _weigh_in(
+            config.weigh_in, sources, slots, args.weigh_in_sheet_id, warnings
+        )
     args.out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     for line in [*preview(slots), *(f"WARNING: {w}" for w in warnings)]:
         print(line)
