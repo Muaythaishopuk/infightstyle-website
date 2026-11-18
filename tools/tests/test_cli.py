@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from PIL import Image
 
-from fightcard.cli import MissingSourceError, main
+from fightcard.cli import MissingSourceError, PosterSettingsError, main
 
 EVENT: dict[str, Any] = {
     "name": "Test night",
@@ -138,3 +139,35 @@ def test_weigh_in_without_sheet_id_has_no_formatting(tmp_path: Path) -> None:
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert "requests" not in payload["weigh_in"]
     assert "No weight for C in bout 1." in payload["warnings"]
+
+
+def test_poster_needs_its_settings(tmp_path: Path) -> None:
+    event = _write(tmp_path / "event.json", EVENT)
+    card = _write(tmp_path / "card.json", {"values": [["Class"]]})
+    with pytest.raises(PosterSettingsError, match="poster"):
+        main(
+            [
+                str(event),
+                "--source",
+                f"Card ={card}",
+                "--out",
+                str(tmp_path / "o.json"),
+                "--poster-out",
+                str(tmp_path / "p.jpg"),
+            ]
+        )
+
+
+def test_poster_is_saved(tmp_path: Path) -> None:
+    font = "/usr/share/fonts/opentype/inter/InterDisplay-BlackItalic.otf"
+    if not Path(font).exists():
+        pytest.skip("poster font not installed")
+    poster = {"title": "RUNNING ORDER", "subtitle": "TEST", "font": font}
+    event = _write(tmp_path / "event.json", {**EVENT, "poster": poster})
+    card = _write(tmp_path / "card.json", {"values": [["Class"], ["N Class", "A", "B", "C", "D"]]})
+    background = tmp_path / "bg.png"
+    Image.new("RGB", (800, 1000)).save(background)
+    out = tmp_path / "p.jpg"
+    args = [str(event), "--source", f"Card ={card}", "--out", str(tmp_path / "o.json")]
+    main([*args, "--poster-background", str(background), "--poster-out", str(out)])
+    assert out.exists()

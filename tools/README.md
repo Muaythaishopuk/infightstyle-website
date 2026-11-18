@@ -1,7 +1,14 @@
 # fightcard: fight-night running order
 
-Builds the **Running order** tab of an event spreadsheet from its *Undercard* and *Main card*
-tabs:
+Builds three things for a fight night from the event spreadsheet:
+
+1. the **Running order** tab;
+2. the **Weigh in** tab for the weigh-in coordinator (last bout first, red then blue, with
+   weight, allowance, limit, a box for the recorded weight and a Yes/No result);
+3. the public **running-order post** for Instagram (main and co-main event at the top, larger,
+   then every other bout down to the first; fighter names only).
+
+The running order:
 
 - puts every bout in class order (set per event: N, then C, then B, then A);
 - puts each gym in one corner for the whole night, with any gyms or fighters you name
@@ -24,9 +31,15 @@ Save each source tab as returned by the Google Sheets `get_values` tool, then:
 
 ```bash
 python3 -m fightcard events/2026-11-21-fight-league-1.json \
+  --source "Running order=running.json" \
   --source "Undercard - =undercard.json" --source "Main card =main.json" \
   --out payload.json --sheet-id 211120
 ```
+
+Add `--weigh-in-sheet-id 211121` for the weigh-in formatting, and
+`--poster-background bg.jpg --poster-out post.jpg` for the post. Weights come from the tabs
+listed under `weigh_in.weight_sources`; allowances default to 0.5 kg with per-fighter
+exceptions in `allowance_overrides_kg`.
 
 It prints the running order and any warnings (TBC fighters, same gym in both corners).
 `payload.json` holds the cells for `update_formulas` and the formatting for

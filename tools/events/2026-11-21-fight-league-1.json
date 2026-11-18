@@ -97,5 +97,10 @@
         }
       }
     ]
+  },
+  "poster": {
+    "title": "RUNNING ORDER",
+    "subtitle": "FIGHT LEAGUE #1  •  SATURDAY 21 NOVEMBER",
+    "font": "/usr/share/fonts/opentype/inter/InterDisplay-BlackItalic.otf"
   }
 }

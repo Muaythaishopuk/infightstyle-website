@@ -57,6 +57,15 @@ class WeighInConfig:
 
 
 @dataclass(frozen=True)
+class PosterConfig:
+    """Wording and font for the public running-order post."""
+
+    title: str
+    subtitle: str
+    font: str
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Everything needed to build one event's running order."""
 
@@ -69,6 +78,7 @@ class EventConfig:
     red_corner_gyms: tuple[str, ...]
     red_corner_fighters: tuple[str, ...]
     weigh_in: WeighInConfig | None = None
+    poster: PosterConfig | None = None
 
 
 def _source(raw: dict[str, Any]) -> SourceTab:
@@ -103,6 +113,7 @@ def parse_config(raw: dict[str, Any]) -> EventConfig:
         red_corner_gyms=tuple(raw.get("red_corner_gyms", ())),
         red_corner_fighters=tuple(raw.get("red_corner_fighters", ())),
         weigh_in=_weigh_in(raw.get("weigh_in")),
+        poster=PosterConfig(**raw["poster"]) if "poster" in raw else None,
     )
 
 

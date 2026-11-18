@@ -3,6 +3,7 @@ name = "fightcard"
 version = "0.1.0"
 description = "Builds fight-night running orders (corners, class order, timings) from the event spreadsheet."
 requires-python = ">=3.11"
+dependencies = ["pillow>=10"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.10"]

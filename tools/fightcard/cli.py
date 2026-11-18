@@ -22,6 +22,7 @@ from fightcard.config import load_config
 from fightcard.corners import assign_corners
 from fightcard.formatting import format_requests
 from fightcard.parsing import parse_source
+from fightcard.poster import PosterStyle, poster_lines, render
 from fightcard.schedule import build_schedule
 from fightcard.sheet import build_grid, slot_lengths
 from fightcard.weighin import build_grid as build_weigh_in_grid
@@ -31,7 +32,7 @@ from fightcard.weighin import format_requests as weigh_in_requests
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fightcard.config import EventConfig, SourceTab, WeighInConfig
+    from fightcard.config import EventConfig, PosterConfig, SourceTab, WeighInConfig
     from fightcard.models import Bout
     from fightcard.schedule import Slot
 
@@ -118,6 +119,20 @@ def _weigh_in(
     return result
 
 
+class PosterSettingsError(ValueError):
+    """Raised when a post is asked for without the settings it needs."""
+
+
+def _poster(
+    settings: PosterConfig | None, slots: Sequence[Slot], background: Path | None, out: Path
+) -> None:
+    if settings is None or background is None:
+        msg = "--poster-out needs --poster-background and a 'poster' block in the event file."
+        raise PosterSettingsError(msg)
+    style = PosterStyle(font=Path(settings.font), title=settings.title, subtitle=settings.subtitle)
+    render(poster_lines(slots, style.labels), background, out, style)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the command line and return the exit code."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -126,6 +141,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, required=True, help="where to write the payload")
     parser.add_argument("--sheet-id", type=int, help="numeric id of the running-order tab")
     parser.add_argument("--weigh-in-sheet-id", type=int, help="numeric id of the weigh-in tab")
+    parser.add_argument("--poster-background", type=Path, help="background image for the post")
+    parser.add_argument("--poster-out", type=Path, help="where to save the post image")
     args = parser.parse_args(argv)
 
     config = load_config(args.event)
@@ -143,6 +160,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         payload["weigh_in"] = _weigh_in(
             config.weigh_in, sources, slots, args.weigh_in_sheet_id, warnings
         )
+    if args.poster_out is not None:
+        _poster(config.poster, slots, args.poster_background, args.poster_out)
     args.out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     for line in [*preview(slots), *(f"WARNING: {w}" for w in warnings)]:
         print(line)
