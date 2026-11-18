@@ -26,13 +26,8 @@
   ],
   "intervals": [
     {
-      "after_class": "N",
-      "label": "Interval 1",
-      "minutes": 15
-    },
-    {
       "after_class": "C",
-      "label": "Interval 2",
+      "label": "Interval",
       "minutes": 30
     }
   ],

@@ -24,7 +24,7 @@ def test_fight_league_one_settings() -> None:
         ("B", 19),
         ("A", 28),
     ]
-    assert [(i.after_class, i.minutes) for i in config.intervals] == [("N", 15), ("C", 30)]
+    assert [(i.after_class, i.minutes) for i in config.intervals] == [("C", 30)]
     assert config.sources[0].tab == "Running order"
     assert config.sources[0].billing is Billing.LISTED
     assert config.red_corner_fighters == ("Jake Newman", "Karl Ryan", "Max Manley")
