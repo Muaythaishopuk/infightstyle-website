@@ -1,7 +1,7 @@
 {
   "name": "INFIGHTSTYLE Fight League #1, 21 November 2026",
   "output_tab": "Running order",
-  "start_time": "13:30",
+  "start_time": "14:00",
   "classes": [
     {
       "code": "N",
@@ -58,6 +58,12 @@
     "Karl Ryan",
     "Max Manley"
   ],
+  "pinned_bouts": {
+    "Kieran Lydon": 4
+  },
+  "gym_gaps": {
+    "GFC Muay Thai": 2
+  },
   "weigh_in": {
     "output_tab": "Weigh in",
     "default_allowance_kg": 0.5,

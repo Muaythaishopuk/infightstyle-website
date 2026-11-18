@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import time
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -77,6 +77,8 @@ class EventConfig:
     sources: tuple[SourceTab, ...]
     red_corner_gyms: tuple[str, ...]
     red_corner_fighters: tuple[str, ...]
+    pinned_bouts: dict[str, int] = field(default_factory=dict)
+    gym_gaps: dict[str, int] = field(default_factory=dict)
     weigh_in: WeighInConfig | None = None
     poster: PosterConfig | None = None
 
@@ -112,6 +114,8 @@ def parse_config(raw: dict[str, Any]) -> EventConfig:
         sources=tuple(_source(s) for s in raw["sources"]),
         red_corner_gyms=tuple(raw.get("red_corner_gyms", ())),
         red_corner_fighters=tuple(raw.get("red_corner_fighters", ())),
+        pinned_bouts={k: int(v) for k, v in raw.get("pinned_bouts", {}).items()},
+        gym_gaps={k: int(v) for k, v in raw.get("gym_gaps", {}).items()},
         weigh_in=_weigh_in(raw.get("weigh_in")),
         poster=PosterConfig(**raw["poster"]) if "poster" in raw else None,
     )

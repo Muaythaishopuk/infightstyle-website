@@ -21,9 +21,10 @@ from typing import TYPE_CHECKING, Any
 from fightcard.config import load_config
 from fightcard.corners import assign_corners
 from fightcard.formatting import format_requests
+from fightcard.ordering import OrderRules, arrange
 from fightcard.parsing import parse_source
 from fightcard.poster import PosterStyle, poster_lines, render
-from fightcard.schedule import build_schedule
+from fightcard.schedule import build_schedule, order_by_class
 from fightcard.sheet import build_grid, slot_lengths
 from fightcard.weighin import build_grid as build_weigh_in_grid
 from fightcard.weighin import build_rows
@@ -79,7 +80,10 @@ def plan(config: EventConfig, sources: dict[str, Path]) -> tuple[list[Slot], lis
     bouts = _read(config.sources, sources, warnings)
     corners = assign_corners(bouts, config.red_corner_gyms, config.red_corner_fighters)
     warnings.extend(corners.warnings)
-    slots = build_schedule(corners.bouts, config.classes, config.start_time, config.intervals)
+    rules = OrderRules(pinned=config.pinned_bouts, gym_gaps=config.gym_gaps)
+    arranged, order_warnings = arrange(order_by_class(corners.bouts, config.classes), rules)
+    warnings.extend(order_warnings)
+    slots = build_schedule(arranged, config.classes, config.start_time, config.intervals)
     return slots, warnings
 
 

@@ -13,6 +13,9 @@ The running order:
 - puts every bout in class order (set per event: N, then C, then B, then A);
 - puts each gym in one corner for the whole night, with any gyms or fighters you name
   kept in the red corner;
+- applies ordering rules: `pinned_bouts` fixes a fighter's bout to a fight number, and
+  `gym_gaps` keeps at least that many other fights between a gym's bouts (bouts stay in
+  their class; otherwise the current order is kept as far as possible);
 - works out start and finish times from the start time and each class's slot length.
 
 The times in the sheet are formulas. Change the yellow **Start time** or **Minutes per bout**
