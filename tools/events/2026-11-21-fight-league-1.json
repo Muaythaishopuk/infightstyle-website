@@ -6,34 +6,34 @@
     {
       "code": "N",
       "label": "N Class",
-      "minutes": 20
+      "minutes": 16
     },
     {
       "code": "C",
       "label": "C Class",
-      "minutes": 20
+      "minutes": 16
     },
     {
       "code": "B",
       "label": "B Class",
-      "minutes": 25
+      "minutes": 19
     },
     {
       "code": "A",
       "label": "A Class",
-      "minutes": 30
+      "minutes": 28
     }
   ],
   "intervals": [
     {
       "after_class": "N",
       "label": "Interval 1",
-      "minutes": 20
+      "minutes": 15
     },
     {
       "after_class": "C",
       "label": "Interval 2",
-      "minutes": 20
+      "minutes": 30
     }
   ],
   "sources": [
