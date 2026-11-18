@@ -59,10 +59,14 @@
     "Max Manley"
   ],
   "pinned_bouts": {
-    "Kieran Lydon": 4
+    "Kieran Lydon": 4,
+    "Asim Ihsan": 9,
+    "John Fitzsimons": 10,
+    "Mohsin Mazhar": 13
   },
+  "default_gym_gap": 2,
   "gym_gaps": {
-    "GFC Muay Thai": 2
+    "GFC Muay Thai": 1
   },
   "weigh_in": {
     "output_tab": "Weigh in",

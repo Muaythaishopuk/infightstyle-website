@@ -79,6 +79,7 @@ class EventConfig:
     red_corner_fighters: tuple[str, ...]
     pinned_bouts: dict[str, int] = field(default_factory=dict)
     gym_gaps: dict[str, int] = field(default_factory=dict)
+    default_gym_gap: int = 0
     weigh_in: WeighInConfig | None = None
     poster: PosterConfig | None = None
 
@@ -116,6 +117,7 @@ def parse_config(raw: dict[str, Any]) -> EventConfig:
         red_corner_fighters=tuple(raw.get("red_corner_fighters", ())),
         pinned_bouts={k: int(v) for k, v in raw.get("pinned_bouts", {}).items()},
         gym_gaps={k: int(v) for k, v in raw.get("gym_gaps", {}).items()},
+        default_gym_gap=int(raw.get("default_gym_gap", 0)),
         weigh_in=_weigh_in(raw.get("weigh_in")),
         poster=PosterConfig(**raw["poster"]) if "poster" in raw else None,
     )

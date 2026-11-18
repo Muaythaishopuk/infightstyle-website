@@ -80,7 +80,7 @@ def plan(config: EventConfig, sources: dict[str, Path]) -> tuple[list[Slot], lis
     bouts = _read(config.sources, sources, warnings)
     corners = assign_corners(bouts, config.red_corner_gyms, config.red_corner_fighters)
     warnings.extend(corners.warnings)
-    rules = OrderRules(pinned=config.pinned_bouts, gym_gaps=config.gym_gaps)
+    rules = OrderRules(config.pinned_bouts, config.gym_gaps, config.default_gym_gap)
     arranged, order_warnings = arrange(order_by_class(corners.bouts, config.classes), rules)
     warnings.extend(order_warnings)
     slots = build_schedule(arranged, config.classes, config.start_time, config.intervals)

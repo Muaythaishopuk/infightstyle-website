@@ -28,5 +28,11 @@ def test_fight_league_one_settings() -> None:
     assert config.sources[0].tab == "Running order"
     assert config.sources[0].billing is Billing.LISTED
     assert config.red_corner_fighters == ("Jake Newman", "Karl Ryan", "Max Manley")
-    assert config.pinned_bouts == {"Kieran Lydon": 4}
-    assert config.gym_gaps == {"GFC Muay Thai": 2}
+    assert config.pinned_bouts == {
+        "Kieran Lydon": 4,
+        "Asim Ihsan": 9,
+        "John Fitzsimons": 10,
+        "Mohsin Mazhar": 13,
+    }
+    assert config.default_gym_gap == 2
+    assert config.gym_gaps == {"GFC Muay Thai": 1}

@@ -25,16 +25,21 @@ if TYPE_CHECKING:
 
 
 class OrderRules(NamedTuple):
-    """Pinned places (fighter name to 1-based bout number) and gaps (gym to bouts between)."""
+    """Pinned places (fighter name to 1-based bout number) and gaps (gym to bouts between).
+
+    ``default_gap`` applies to every gym not named in ``gym_gaps``.
+    """
 
     pinned: dict[str, int]
     gym_gaps: dict[str, int]
+    default_gap: int = 0
 
 
 class _Search:
     def __init__(self, bouts: Sequence[Bout], rules: OrderRules) -> None:
         self.bouts = bouts
         self.gaps = {gym_key(gym): gap for gym, gap in rules.gym_gaps.items()}
+        self.default_gap = rules.default_gap
         names = {name.casefold(): place for name, place in rules.pinned.items()}
         self.place_of: dict[int, int] = {}
         for index, bout in enumerate(bouts):
@@ -46,9 +51,12 @@ class _Search:
         self.order: list[int] = []
         self.last_seen: dict[str, int] = {}
 
+    def _gap(self, gym: str) -> int:
+        return self.gaps.get(gym, self.default_gap)
+
     def _gyms(self, index: int) -> set[str]:
         bout = self.bouts[index]
-        return {gym_key(bout.red.gym), gym_key(bout.blue.gym)} & self.gaps.keys()
+        return {gym for gym in (gym_key(bout.red.gym), gym_key(bout.blue.gym)) if self._gap(gym)}
 
     def _fits(self, index: int, place: int) -> bool:
         bout = self.bouts[index]
@@ -57,7 +65,7 @@ class _Search:
         if self.reserved.get(place, index) != index or self.place_of.get(index, place) != place:
             return False
         return all(
-            place - self.last_seen.get(gym, -999) > self.gaps[gym] for gym in self._gyms(index)
+            place - self.last_seen.get(gym, -999) > self._gap(gym) for gym in self._gyms(index)
         )
 
     def solve(self, remaining: list[int]) -> bool:

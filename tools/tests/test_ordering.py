@@ -68,3 +68,18 @@ def test_unknown_pinned_fighter_is_reported() -> None:
 def test_blue_corner_fighter_can_be_pinned() -> None:
     arranged, _ = arrange(_card(), OrderRules({"O3": 1}, {}))
     assert arranged[0].blue.name == "O3"
+
+
+def test_default_gap_applies_to_every_gym_and_named_gyms_override_it() -> None:
+    card = [
+        bout("k1", "Kiat", "a", "A"),
+        bout("k2", "Kiat", "b", "B"),
+        bout("g1", GFC, "c", "C"),
+        bout("g2", GFC, "d", "D"),
+        bout("x", "X", "e", "E"),
+    ]
+    arranged, warnings = arrange(card, OrderRules({}, {GFC: 1}, default_gap=2))
+    assert warnings == []
+    names = [b.red.name for b in arranged]
+    assert names.index("k2") - names.index("k1") > 2
+    assert names.index("g2") - names.index("g1") > 1
