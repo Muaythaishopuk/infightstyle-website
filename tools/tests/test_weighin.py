@@ -1,7 +1,14 @@
 import pytest
 
 from fightcard.models import TBC, Bout, Fighter
-from fightcard.weighin import HEADERS, build_grid, build_rows, format_requests, parse_weight_kg
+from fightcard.weighin import (
+    HEADERS,
+    build_grid,
+    build_rows,
+    format_requests,
+    parse_weight_kg,
+    same_fighter,
+)
 from tests.builders import bout, schedule
 
 
@@ -106,3 +113,40 @@ def test_corner_cells_are_coloured_per_row() -> None:
     assert all(
         r[next(iter(r))].get("range", {"sheetId": 5}).get("sheetId", 5) == 5 for r in requests
     )
+
+
+@pytest.mark.parametrize(
+    ("listed", "source", "expected"),
+    [
+        (Fighter("Jake Newman ", "Peel"), Fighter("jake  newman", "Other"), True),
+        (Fighter("Tiernan Hyde", "Kiatphontip"), Fighter("Tiernan", "Kiatphontip "), True),
+        (Fighter("Lewis Hinds", "Black dragon"), Fighter("Lewis Hands", "Black Dragon"), True),
+        (Fighter("Dan Fardey", "Alliance MT"), Fighter("Dan Farday", "Alliance"), True),
+        (Fighter("Nick Lacey", "Alliance"), Fighter("Dan Farday", "Alliance MT"), False),
+        (Fighter("Lewis Hinds", "Black dragon"), Fighter("Lewis Danby", "Johnsons"), False),
+        (Fighter(TBC, "Spain"), Fighter(TBC, "Spain"), False),
+        (Fighter("Ann", "x"), Fighter("", "x"), False),
+    ],
+)
+def test_same_fighter(listed: Fighter, source: Fighter, *, expected: bool) -> None:
+    assert same_fighter(listed, source) is expected
+
+
+def test_both_names_changed_still_finds_the_weights() -> None:
+    source = Bout(
+        Fighter("Lewis Hands", "Black dragon", "57kg"),
+        Fighter("Tiernan", "Kiatphontip", "58kg"),
+        "N",
+        "source",
+    )
+    rows, warnings = build_rows(
+        schedule(bout("Lewis Hinds", "Black dragon", "Tiernan Hyde", "Kiatphontip")),
+        [source],
+        0.5,
+        {},
+    )
+    assert warnings == []
+    assert [(r.fighter.name, r.weight_kg) for r in rows] == [
+        ("Lewis Hinds", 57.0),
+        ("Tiernan Hyde", 58.0),
+    ]

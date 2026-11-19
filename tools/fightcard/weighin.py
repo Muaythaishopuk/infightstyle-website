@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fightcard.cells import Cell, as_text
+from fightcard.gyms import gym_key
 from fightcard.models import TBC
 from fightcard.requests import (
     DARK,
@@ -67,19 +68,33 @@ def parse_weight_kg(text: str) -> float | None:
 
 
 def _key(name: str) -> str | None:
-    cleaned = name.strip().casefold()
+    cleaned = " ".join(name.casefold().split())
     return None if cleaned in {"", TBC.casefold()} else cleaned
+
+
+def same_fighter(listed: Fighter, source: Fighter) -> bool:
+    """Tell whether two entries are the same person.
+
+    Either the full names match, or the first names match at the same gym, which covers a
+    surname added later ("Tiernan" and "Tiernan Hyde") or corrected ("Lewis Hands" and
+    "Lewis Hinds"). TBC and blank names never match.
+    """
+    first, second = _key(listed.name), _key(source.name)
+    if first is None or second is None:
+        return False
+    if first == second:
+        return True
+    same_gym = gym_key(listed.gym) == gym_key(source.gym)
+    return same_gym and first.split()[0] == second.split()[0]
+
+
+def _match(fighter: Fighter, source: Bout) -> Fighter | None:
+    return next((side for side in (source.red, source.blue) if same_fighter(fighter, side)), None)
 
 
 def _side_weights(bout: Bout, source: Bout) -> tuple[str, str]:
     """Weights for ``bout``'s red and blue fighters taken from the matching ``source``."""
-    source_sides: dict[str | None, Fighter] = {
-        _key(source.red.name): source.red,
-        _key(source.blue.name): source.blue,
-    }
-    source_sides.pop(None, None)
-    red = source_sides.get(_key(bout.red.name))
-    blue = source_sides.get(_key(bout.blue.name))
+    red, blue = _match(bout.red, source), _match(bout.blue, source)
     if red is None:
         red = source.blue if blue is source.red else source.red
     if blue is None:
@@ -88,11 +103,10 @@ def _side_weights(bout: Bout, source: Bout) -> tuple[str, str]:
 
 
 def _find_source(bout: Bout, sources: Sequence[Bout]) -> Bout | None:
-    names = {_key(bout.red.name), _key(bout.blue.name)} - {None}
-    for source in sources:
-        if names & {_key(source.red.name), _key(source.blue.name)}:
-            return source
-    return None
+    return next(
+        (s for s in sources if _match(bout.red, s) is not None or _match(bout.blue, s) is not None),
+        None,
+    )
 
 
 def _describe(bout: Bout) -> str:
