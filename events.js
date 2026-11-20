@@ -21,7 +21,7 @@ window.IFS_EVENTS = [
     title: "INFIGHTSTYLE Fight League #1",
     tag: "Pro & Pro-Am fight night",
     date: "2026-11-21",
-    venue: "The Hideout Sports Venue, Farnworth · Doors 12pm, first fight 1pm",
+    venue: "The Hideout Sports Venue, Farnworth · Doors 12pm, first fight 1:30pm",
     poster: "poster-fight-league-1-2026-11-21.jpg",
     entryUrl: "https://combat-tickets.com/tickets/?sid=87",
     entryLabel: "Buy tickets",

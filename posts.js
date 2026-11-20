@@ -23,7 +23,7 @@ window.IFS_POSTS = [
     summary: "A WMO world title, a European title and a stacked undercard. Everything you need to know about Saturday 21 November at the Hideout Arena, Bolton.",
     body: [
       { img: "poster-fight-league-1-2026-11-21.jpg", alt: "INFIGHTSTYLE Fight League poster, 21 November, The Hideout Sports Venue" },
-      "INFIGHTSTYLE Fight League #1 takes place on Saturday 21 November 2026 at The Hideout Sports Venue, Whoolden Street, Farnworth BL4 7EP. Doors open at 12pm and the first fight is at 1pm. It's our first adult fight night, run in collaboration with Infightstyle and powered by Muay Thai Shop UK and Custom Boxing Rings, and the card has grown into one of the biggest UK Muay Thai shows of the year.",
+      "INFIGHTSTYLE Fight League #1 takes place on Saturday 21 November 2026 at The Hideout Sports Venue, Whoolden Street, Farnworth BL4 7EP. Doors open at 12pm and the first fight is at 1:30pm. It's our first adult fight night, run in collaboration with Infightstyle and powered by Muay Thai Shop UK and Custom Boxing Rings, and the card has grown into one of the biggest UK Muay Thai shows of the year.",
       { h: "Tickets" },
       { list: ["Standard: £40", "Outer ringside: £50", "Ringside: £65", "VIP suite: £160 (unlimited bar)"] },
       "We're expecting a sell-out, so don't leave it late.",
@@ -107,7 +107,7 @@ window.IFS_POSTS = [
       { list: [
         "Saturday 21 November 2026",
         "The Hideout Sports Venue, Whoolden Street, Farnworth BL4 7EP",
-        "Doors 12pm, first fight 1pm",
+        "Doors 12pm, first fight 1:30pm",
         "Standard £40 · Outer ringside £50 · Ringside £65 · VIP suite £160 (unlimited bar)",
       ] },
       { button: "Buy tickets", url: "https://combat-tickets.com/tickets/?sid=87" },
@@ -139,7 +139,7 @@ window.IFS_POSTS = [
       { list: [
         "Saturday 21 November 2026",
         "The Hideout Sports Venue, Whoolden Street, Farnworth BL4 7EP",
-        "Doors 12pm, first fight 1pm",
+        "Doors 12pm, first fight 1:30pm",
         "Standard £40 · Outer ringside £50 · Ringside £65 · VIP suite £160 (unlimited bar)",
       ] },
       { button: "Buy tickets", url: "https://combat-tickets.com/tickets/?sid=87" },
