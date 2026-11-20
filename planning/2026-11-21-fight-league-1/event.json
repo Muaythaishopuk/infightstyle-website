@@ -17,7 +17,7 @@
   },
   "tunnel": {
     "width_m": 3.0,
-    "depth_m": 4.5
+    "depth_m": 3.0
   },
   "seats": {
     "width_m": 0.5,
@@ -37,7 +37,7 @@
         "left",
         "right"
       ],
-      "target_seats": 200,
+      "target_seats": 150,
       "rows": null,
       "gap_before_m": 0,
       "straight_rows": false
@@ -51,16 +51,11 @@
         "left",
         "right"
       ],
-      "target_seats": 250,
+      "target_seats": 300,
       "rows": null,
       "gap_before_m": 0.6,
       "straight_rows": false
     }
   ],
-  "bleachers": {
-    "depth_m": 4.5,
-    "length_m": 25.6,
-    "row_depth_m": 0.75,
-    "seat_width_m": 0.45
-  }
+  "bleachers": null
 }

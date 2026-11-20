@@ -32,7 +32,7 @@ Edit the event's `event.json`, then run the command again. All sizes are in metr
 | `seats.radial_aisle_m` | Aisles lined up with the ring posts, cutting through every row |
 | `seats.tier_aisle_m` | Minimum aisle wherever two different tiers meet |
 | `seats.min_block_seats` | Never leave a run of chairs shorter than this (avoids lone chairs) |
-| `bleachers` | Raised stand against the left wall, split by the tunnel: depth, length, step depth and seat width (used to estimate capacity) |
+| `bleachers` | Optional (`null` for none). Raised stand against the left wall, split by the tunnel: depth, length, step depth and seat width (used to estimate capacity) |
 | `tiers[]` | Floor chairs, closest to the ring first. `sides` says which sides of the ring the tier uses. `target_seats` is the exact number wanted (the last row is trimmed evenly across sides); `rows` caps the rows; both `null` fills the space. `gap_before_m` is a walking aisle before that tier. `straight_rows: true` makes rows run the full length of the floor instead of wrapping round the ring (used for the standard block in front of the bleachers). Tiers are placed in the order listed |
 
 For a new event, copy the folder under `planning/`, rename it and edit `event.json`.

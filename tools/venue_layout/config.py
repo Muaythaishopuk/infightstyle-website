@@ -180,7 +180,7 @@ class EventSpec:
     ring: RingSpec
     walkway: WalkwaySpec
     tunnel: TunnelSpec
-    bleachers: BleacherSpec
+    bleachers: BleacherSpec | None
     seats: SeatSpec
     tiers: tuple[TierSpec, ...]
 
@@ -196,7 +196,8 @@ class EventSpec:
         if self.ring.platform_m >= min(self.room.width_m, self.room.depth_m):
             msg = "the ring does not fit in the room"
             raise ConfigError(msg)
-        if self.bleachers.depth_m + self.ring.platform_m / 2 >= self.room.width_m / 2:
+        stand = self.bleachers.depth_m if self.bleachers else 0.0
+        if stand + self.ring.platform_m / 2 >= self.room.width_m / 2:
             msg = "the bleachers reach the ring"
             raise ConfigError(msg)
 
@@ -301,7 +302,9 @@ def parse_event(raw: JsonObject) -> EventSpec:
         ring=_measurements(RingSpec, raw, "ring"),
         walkway=_measurements(WalkwaySpec, raw, "walkway"),
         tunnel=_measurements(TunnelSpec, raw, "tunnel"),
-        bleachers=_measurements(BleacherSpec, raw, "bleachers"),
+        bleachers=(
+            None if raw["bleachers"] is None else _measurements(BleacherSpec, raw, "bleachers")
+        ),
         seats=_measurements(SeatSpec, raw, "seats"),
         tiers=tuple(_tier(tier, i) for i, tier in enumerate(tiers)),
     )

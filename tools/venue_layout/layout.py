@@ -246,9 +246,11 @@ class _Floor:
             raise LayoutError(msg)
 
 
-def _bleachers(event: EventSpec, tunnel: Rect, room: Rect) -> tuple[Rect, Rect]:
-    """The stand against the left wall, split in two by the tunnel."""
+def _bleachers(event: EventSpec, tunnel: Rect, room: Rect) -> tuple[Rect, ...]:
+    """The stand against the left wall, split in two by the tunnel (none if not used)."""
     spec = event.bleachers
+    if spec is None:
+        return ()
     stand = Rect.centred(spec.depth_m / 2, room.centre[1], spec.depth_m, spec.length_m)
     return (
         Rect(stand.x, stand.y, stand.width, tunnel.y - stand.y),
@@ -256,9 +258,11 @@ def _bleachers(event: EventSpec, tunnel: Rect, room: Rect) -> tuple[Rect, Rect]:
     )
 
 
-def _bleacher_capacity(event: EventSpec, halves: tuple[Rect, Rect]) -> int:
+def _bleacher_capacity(event: EventSpec, halves: tuple[Rect, ...]) -> int:
     """Rough capacity: whole rows times whole seats per row, in both halves."""
     spec = event.bleachers
+    if spec is None:
+        return 0
     return sum(spec.steps * whole_fits(half.height, spec.seat_width_m) for half in halves)
 
 
@@ -271,7 +275,7 @@ def build_layout(event: EventSpec) -> Layout:
     tunnel = Rect(0, cy - event.tunnel.width_m / 2, event.tunnel.depth_m, event.tunnel.width_m)
     bleachers = _bleachers(event, tunnel, room)
     aisle = event.room.perimeter_aisle_m
-    floor_left = event.bleachers.depth_m + aisle
+    floor_left = (event.bleachers.depth_m if event.bleachers else 0.0) + aisle
     floor = _Floor(
         ring=ring,
         seating_area=Rect(

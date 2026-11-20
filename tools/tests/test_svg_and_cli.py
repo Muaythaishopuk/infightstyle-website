@@ -80,3 +80,14 @@ def test_cli_reports_bad_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]
     bad.write_text("[]", encoding="utf-8")
     assert main([str(bad)]) == 1
     assert "error:" in capsys.readouterr().err
+
+
+def test_plan_without_bleachers(real_event: EventSpec) -> None:
+    layout = build_layout(real_event)
+    assert layout.bleachers == ()
+    assert layout.bleacher_capacity == 0
+    assert layout.seating_area.x == real_event.room.perimeter_aisle_m
+    svg = render_svg(layout)
+    assert "BLEACHERS" not in svg
+    assert "Total with bleachers" not in svg
+    assert "Floor chairs: 450" in svg

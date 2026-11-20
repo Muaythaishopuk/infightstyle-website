@@ -24,9 +24,10 @@ def test_real_event_file_is_valid() -> None:
     assert event.room.depth_m == 28
     assert event.ring.ropes_m == 5.49  # 18 ft inside the ropes
     assert [(t.name, t.target_seats) for t in event.tiers] == [
-        ("Ringside", 200),
-        ("Outer ringside", 250),
+        ("Ringside", 150),
+        ("Outer ringside", 300),
     ]
+    assert event.bleachers is None
 
 
 @pytest.mark.parametrize(

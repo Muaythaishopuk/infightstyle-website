@@ -111,8 +111,11 @@ def _walkout(layout: Layout) -> list[str]:
 
 def _bleachers(layout: Layout) -> list[str]:
     """Each half of the stand, with a line for every stepped row."""
-    step = layout.event.bleachers.row_depth_m
-    rows = layout.event.bleachers.steps
+    spec = layout.event.bleachers
+    if spec is None:
+        return []
+    step = spec.row_depth_m
+    rows = spec.steps
     parts: list[str] = []
     for half in layout.bleachers:
         parts.append(rect(half, Style(BLEACHER_FILL, "#334155", 1.5)))
@@ -166,7 +169,8 @@ def _legend(layout: Layout, left_px: float) -> list[str]:
         (tier.colour, f"{tier.name} (floor): {layout.count(tier.name)} seats")
         for tier in event.tiers
     ]
-    entries.append((BLEACHER_FILL, f"Standard (bleachers): about {layout.bleacher_capacity}"))
+    if event.bleachers:
+        entries.append((BLEACHER_FILL, f"Standard (bleachers): about {layout.bleacher_capacity}"))
     y = 100.0
     for colour, summary in entries:
         parts.append(
@@ -175,39 +179,32 @@ def _legend(layout: Layout, left_px: float) -> list[str]:
         )
         parts.append(text(left_px + 24, y + 2, summary, size=13))
         y += 26
-    parts += [
-        text(
-            left_px,
-            y + 4,
-            f"Floor chairs: {len(layout.seats)}",
-            size=14,
-            extra="font-weight='bold'",
-        ),
-        text(
-            left_px,
-            y + 26,
-            f"Total with bleachers: about {len(layout.seats) + layout.bleacher_capacity}",
-            size=14,
-            extra="font-weight='bold'",
-        ),
-    ]
-    y += 22
+    totals = [f"Floor chairs: {len(layout.seats)}"]
+    walls = "round the walls"
+    stand: list[str] = []
+    if event.bleachers:
+        totals.append(f"Total with bleachers: about {len(layout.seats) + layout.bleacher_capacity}")
+        walls += " and in front of bleachers"
+        stand.append(
+            f"Bleachers {event.bleachers.depth_m:g} m deep x {event.bleachers.length_m:g} m long, "
+            f"{event.bleachers.steps} steps"
+        )
+    for line in totals:
+        parts.append(text(left_px, y + 4, line, size=14, extra="font-weight='bold'"))
+        y += 22
     notes = [
         f"Ring platform {event.ring.platform_m:g} m, ropes {event.ring.ropes_m:g} m",
         f"{event.ring.clearance_m:g} m clear around ring (officials, corners)",
         f"Walkway {event.walkway.width_m:g} m wide + {event.walkway.barrier_m:g} m barriers",
-        f"{event.room.perimeter_aisle_m:g} m aisle round the walls and in front of bleachers",
-        (
-            f"Bleachers {event.bleachers.depth_m:g} m deep x {event.bleachers.length_m:g} m long, "
-            f"{event.bleachers.steps} steps"
-        ),
+        f"{event.room.perimeter_aisle_m:g} m aisle {walls}",
+        *stand,
         f"{event.seats.corner_aisle_m:g} m diagonal aisles at the corners",
         f"{event.seats.radial_aisle_m:g} m aisles in line with the ring posts",
         f"Chair {event.seats.width_m:g} m wide, rows {event.seats.row_depth_m:g} m deep",
         "Red corner top-left, blue corner bottom-right",
         "Grid squares are 1 m",
     ]
-    y += 44
+    y += 22
     parts.append(text(left_px, y, "Notes", size=14, extra="font-weight='bold'"))
     for note in notes:
         y += 20
