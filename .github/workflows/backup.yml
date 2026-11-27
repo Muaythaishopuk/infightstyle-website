@@ -17,7 +17,6 @@ on:
 
 env:
   B2_BUCKET: muaythaishopuk-backups
-  B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
   KEEP: 12
 
 jobs:
@@ -28,7 +27,6 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-      AWS_DEFAULT_REGION: eu-central-003
     steps:
       - name: Check the Backblaze key is set
         id: ready
@@ -39,6 +37,18 @@ jobs:
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Backblaze tells us the bucket's address, so it never needs typing in.
+      - name: Find the Backblaze address
+        if: steps.ready.outputs.ok == 'true'
+        run: |
+          S3_URL=$(curl -sSf -u "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
+            https://api.backblazeb2.com/b2api/v3/b2_authorize_account | jq -r '.apiInfo.storageApi.s3ApiUrl')
+          REGION=$(echo "$S3_URL" | sed -E 's#https://s3\.([^.]+)\..*#\1#')
+          test -n "$REGION"
+          echo "B2_ENDPOINT=$S3_URL" >> "$GITHUB_ENV"
+          echo "AWS_DEFAULT_REGION=$REGION" >> "$GITHUB_ENV"
+          echo "Backblaze address: $S3_URL"
 
       - uses: actions/checkout@v5
         if: steps.ready.outputs.ok == 'true'
