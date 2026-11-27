@@ -25,16 +25,22 @@ jobs:
     permissions:
       contents: read
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
     steps:
       - name: Check the Backblaze key is set
         id: ready
         run: |
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+          # Strip stray spaces and line breaks picked up when pasting the key.
+          KEY_ID=$(printf '%s' "$B2_KEY_ID" | tr -d '[:space:]')
+          APP_KEY=$(printf '%s' "$B2_APPLICATION_KEY" | tr -d '[:space:]')
+          if [ -z "$KEY_ID" ] || [ -z "$APP_KEY" ]; then
             echo "::notice::Backblaze key not added yet; skipping the backup."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
+            echo "::add-mask::$APP_KEY"
+            echo "AWS_ACCESS_KEY_ID=$KEY_ID" >> "$GITHUB_ENV"
+            echo "AWS_SECRET_ACCESS_KEY=$APP_KEY" >> "$GITHUB_ENV"
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
 
