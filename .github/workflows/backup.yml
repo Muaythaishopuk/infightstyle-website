@@ -1,0 +1,81 @@
+name: Weekly Backup to Backblaze
+
+# Every Sunday night: packs the whole repository (every branch and the full
+# history) into one git bundle, proves it can be restored, uploads it to
+# Backblaze B2 and keeps the newest 12 weekly copies.
+#
+# To restore:  download the newest .bundle from the bucket, then
+#   git clone <name>.bundle restored-site
+#
+# Needs repository secrets B2_KEY_ID and B2_APPLICATION_KEY (a Backblaze
+# application key limited to the bucket below). Until they are added the job
+# skips instead of failing.
+on:
+  schedule:
+    - cron: '17 2 * * 0'
+  workflow_dispatch:
+
+env:
+  B2_BUCKET: muaythaishopuk-backups
+  B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
+  KEEP: 12
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      AWS_DEFAULT_REGION: eu-central-003
+    steps:
+      - name: Check the Backblaze key is set
+        id: ready
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::notice::Backblaze key not added yet; skipping the backup."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.ready.outputs.ok == 'true'
+        with:
+          fetch-depth: 0
+
+      - name: Bundle every branch and tag
+        if: steps.ready.outputs.ok == 'true'
+        run: |
+          git fetch --quiet origin '+refs/heads/*:refs/remotes/origin/*' --tags
+          for branch in $(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin | grep -v '^HEAD$'); do
+            git branch --force "$branch" "origin/$branch" >/dev/null 2>&1 || true
+          done
+          NAME="${GITHUB_REPOSITORY#*/}-$(date -u +%F).bundle"
+          git bundle create "$NAME" HEAD --branches --tags
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+          ls -lh "$NAME"
+
+      - name: Prove the backup restores
+        if: steps.ready.outputs.ok == 'true'
+        run: |
+          git bundle verify "$NAME"
+          git clone --quiet "$NAME" restore-test
+          test "$(git -C restore-test rev-parse HEAD)" = "$(git rev-parse HEAD)"
+          echo "Restored copy matches the current main branch."
+
+      - name: Upload to Backblaze
+        if: steps.ready.outputs.ok == 'true'
+        run: |
+          aws s3 cp "$NAME" "s3://$B2_BUCKET/${GITHUB_REPOSITORY#*/}/$NAME" --endpoint-url "$B2_ENDPOINT"
+
+      - name: Keep the newest weekly copies
+        if: steps.ready.outputs.ok == 'true'
+        run: |
+          PREFIX="${GITHUB_REPOSITORY#*/}/"
+          aws s3 ls "s3://$B2_BUCKET/$PREFIX" --endpoint-url "$B2_ENDPOINT" \
+            | awk '{print $4}' | grep '\.bundle$' | sort | head -n -"$KEEP" \
+            | while read -r old; do
+                aws s3 rm "s3://$B2_BUCKET/$PREFIX$old" --endpoint-url "$B2_ENDPOINT"
+              done
